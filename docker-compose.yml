@@ -11,7 +11,7 @@ services:
   go-executor:
     build:
       context: .
-      dockerfile: Dockerfile.go
+      dockerfile: Dockerfile.golang
     container_name: go-executor
     restart: always
 
