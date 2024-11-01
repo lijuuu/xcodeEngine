@@ -1,7 +1,7 @@
 
-# Isolated Code Execution (ICE)
+# Sandboxed Code Execution (SCE)
 
-ICE is a service that allows you to execute code snippets in Python, Go, and Node.js through a RESTful API. The service runs Docker containers for executing the provided code safely, ensuring isolation and security.
+SCE is a service that allows you to execute code snippets in Python, Go, and Node.js through a RESTful API. The service runs Docker containers for executing the provided code safely, ensuring isolation and security.
 
 ## Features
 
