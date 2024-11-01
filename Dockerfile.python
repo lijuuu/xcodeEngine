@@ -1,0 +1,5 @@
+FROM python:3.9-slim
+WORKDIR /app
+COPY entrypoint.sh /app/
+RUN chmod +x /app/entrypoint.sh
+CMD ["/app/entrypoint.sh"]

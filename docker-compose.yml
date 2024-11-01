@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  python-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: python-executor
+    restart: always
+
+  go-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.go
+    container_name: go-executor
+    restart: always
+
+  js-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.js
+    container_name: js-executor
+    restart: always
