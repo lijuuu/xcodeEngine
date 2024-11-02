@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -18,9 +19,14 @@ func main() {
 
 	r.Use(pkg.LoggingMiddleware)
 	r.Use(service.RateLimiter.Limit)
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Hey there, checkout https://github.com/liju-github/SandboxedCodeExecution"})
+	})
 
 	r.HandleFunc("/execute", service.HandleExecute).Methods("POST")
-	
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = DefaultPort
