@@ -31,7 +31,6 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 		}
 	}
 
-	// Check system patterns always
 	systemPatterns := []string{
 		`(?i)(subprocess|exec\.|shell|eval|child_process)`,
 		`(?i)(io/ioutil|os\.Open|os\.Create|os\.Remove)`,
@@ -58,7 +57,6 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 			`pip|setuptools|pkg_resources`,
 		}...)
 	case "go":
-		// Define safe packages that can be imported
 		safePackages := []string{
 			"fmt",
 			"strings",
@@ -71,13 +69,11 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 			"regexp",
 		}
 
-		// Create a pattern that matches any import that's not in our safe list
 		if strings.Contains(code, "import") {
 			lines := strings.Split(code, "\n")
 			for _, line := range lines {
 				line = strings.TrimSpace(line)
 				if strings.HasPrefix(line, "import") {
-					// Handle single import
 					importMatch := regexp.MustCompile(`^import\s+"([^"]+)"`).FindStringSubmatch(line)
 					if importMatch != nil {
 						pkg := importMatch[1]
@@ -99,7 +95,6 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 			}
 		}
 
-		// Always check for dangerous package usage regardless of imports
 		restrictedPatterns = []string{
 			`unsafe\.`,
 			`reflect\.`,
