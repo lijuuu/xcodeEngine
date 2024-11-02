@@ -3,6 +3,7 @@ package pkg
 import (
 	"errors"
 	"regexp"
+	"strings"
 )
 
 type SanitizationError struct {
@@ -30,11 +31,11 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 		}
 	}
 
-	
+	// Check system patterns always
 	systemPatterns := []string{
-		`(?i)(os\.|subprocess|exec|system|shell|eval|child_process)`,
-		`(?i)(os\..*file|fs\.|io/ioutil|open|read|write|file)`,
-		`(?i)(http|net|socket|request|fetch|urllib|axios)`,
+		`(?i)(subprocess|exec\.|shell|eval|child_process)`,
+		`(?i)(io/ioutil|os\.Open|os\.Create|os\.Remove)`,
+		`(?i)(net\.Listen|net\.Dial|http\.|urllib|axios)`,
 	}
 	if matched, err := matchPatterns(systemPatterns, code); err != nil || matched {
 		return &SanitizationError{
@@ -43,40 +44,101 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 		}
 	}
 
-	
 	var restrictedPatterns []string
 	switch language {
 	case "python":
-		restrictedPatterns = []string{
-			`^import\s+(?!math|random|datetime|json|re|string|collections|itertools|functools|typing).*$`,
-			`^from\s+(?!math|random|datetime|json|re|string|collections|itertools|functools|typing)\s+import.*$`,
+		if strings.Contains(code, "import") || strings.Contains(code, "from") {
+			restrictedPatterns = []string{
+				`^import\s+(?!math|random|datetime|json|re|string|collections|itertools|functools|typing).*$`,
+				`^from\s+(?!math|random|datetime|json|re|string|collections|itertools|functools|typing)\s+import.*$`,
+			}
+		}
+		restrictedPatterns = append(restrictedPatterns, []string{
 			`__import__`, `globals|locals|vars`, `getattr|setattr|delattr`,
 			`pip|setuptools|pkg_resources`,
-		}
+		}...)
 	case "go":
+		// Define safe packages that can be imported
+		safePackages := []string{
+			"fmt",
+			"strings",
+			"strconv",
+			"math",
+			"time",
+			"encoding/json",
+			"errors",
+			"sort",
+			"regexp",
+		}
+
+		// Create a pattern that matches any import that's not in our safe list
+		if strings.Contains(code, "import") {
+			lines := strings.Split(code, "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if strings.HasPrefix(line, "import") {
+					// Handle single import
+					importMatch := regexp.MustCompile(`^import\s+"([^"]+)"`).FindStringSubmatch(line)
+					if importMatch != nil {
+						pkg := importMatch[1]
+						isSafe := false
+						for _, safePkg := range safePackages {
+							if pkg == safePkg {
+								isSafe = true
+								break
+							}
+						}
+						if !isSafe {
+							return &SanitizationError{
+								Message: "Prohibited go code pattern detected",
+								Details: "Unauthorized import: " + pkg,
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Always check for dangerous package usage regardless of imports
 		restrictedPatterns = []string{
-			`import\s+\([^)]*\)`, `import\s+"(?!fmt|strings|strconv|math|time|encoding/json|errors)"`,
-			`unsafe`, `reflect`, `plugin`, `go/ast`,
+			`unsafe\.`,
+			`reflect\.`,
+			`plugin\.`,
+			`go/ast`,
+			`syscall\.`,
+			`debug\.`,
+			`runtime\.`,
+			`os\.Exit`,
+			`panic\(`,
 		}
 	case "nodejs":
-		restrictedPatterns = []string{
-			`require\(.*\)`, `import\s+.*\s+from`, `import\s*{.*}`,
-			`process`, `global`, `Buffer`, `__dirname`, `__filename`,
+		if strings.Contains(code, "require") || strings.Contains(code, "import") {
+			restrictedPatterns = []string{
+				`require\(.*\)`, `import\s+.*\s+from`, `import\s*{.*}`,
+			}
 		}
+		restrictedPatterns = append(restrictedPatterns, []string{
+			`process`, `global`, `Buffer`,
+			`__proto__`, `prototype`, 
+			`fs`, `child_process`, 
+			`eval`, `Function`, 
+			`process\.env`, 
+		}...)
 	default:
 		return errors.New("unsupported language: " + language)
 	}
 
-	if matched, err := matchPatterns(restrictedPatterns, code); err != nil || matched {
-		return &SanitizationError{
-			Message: "Prohibited " + language + " code pattern detected",
-			Details: "Unauthorized module or operation",
+	if len(restrictedPatterns) > 0 {
+		if matched, err := matchPatterns(restrictedPatterns, code); err != nil || matched {
+			return &SanitizationError{
+				Message: "Prohibited " + language + " code pattern detected",
+				Details: "Unauthorized module or operation",
+			}
 		}
 	}
 
 	return nil
 }
-
 
 func matchPatterns(patterns []string, code string) (bool, error) {
 	for _, pattern := range patterns {

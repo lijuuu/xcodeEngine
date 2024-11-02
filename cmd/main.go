@@ -20,6 +20,7 @@ func main() {
 	r.Use(service.RateLimiter.Limit)
 
 	r.HandleFunc("/execute", service.HandleExecute).Methods("POST")
+	r.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", http.FileServer(http.Dir("./"))))
 
 	port := os.Getenv("PORT")
 	if port == "" {

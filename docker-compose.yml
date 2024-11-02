@@ -6,12 +6,14 @@ services:
     container_name: python-executor
     restart: always
 
+
   go-executor:
     build:
       context: .
       dockerfile: Dockerfile.golang
     container_name: go-executor
     restart: always
+      
 
   js-executor:
     build:
@@ -19,3 +21,4 @@ services:
       dockerfile: Dockerfile.js
     container_name: js-executor
     restart: always
+

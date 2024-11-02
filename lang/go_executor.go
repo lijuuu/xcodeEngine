@@ -1,9 +1,11 @@
 package lang
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 )
 
 func ExecuteGoCode(containerName, code string) (string, error) {
@@ -28,8 +30,18 @@ func ExecuteGoCode(containerName, code string) (string, error) {
 	}
 
 	
-	runCmd := exec.Command("docker", "exec", containerName, "go", "run", "/app/main.go")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	
+	runCmd := exec.CommandContext(ctx, "docker", "exec", containerName, "go", "run", "/app/main.go")
 	output, err := runCmd.CombinedOutput()
+
+	
+	if ctx.Err() == context.DeadlineExceeded {
+		return "", fmt.Errorf("execution timed out")
+	}
+
 	if err != nil {
 		return string(output), err
 	}
