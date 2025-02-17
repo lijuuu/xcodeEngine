@@ -1,6 +1,7 @@
 package lang
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
@@ -12,14 +13,16 @@ func ExecutePythonCode(containerName, code string) (string, error) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "docker", "exec", containerName, "python3", "-c", code)
-	output, err := cmd.CombinedOutput()
+	output := &bytes.Buffer{}
+	cmd.Stdout = output
+	cmd.Stderr = output
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return "", fmt.Errorf("execution timed out")
+	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("execution timed out after 5 seconds")
+		}
+		return output.String(), fmt.Errorf("execution error: %w", err)
 	}
 
-	if err != nil {
-		return string(output), err
-	}
-	return string(output), nil
+	return output.String(), nil
 }

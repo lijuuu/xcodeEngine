@@ -1,24 +1,45 @@
+
 services:
+
   python-executor:
     build:
       context: .
       dockerfile: Dockerfile.python
     container_name: python-executor
-    restart: always
-
+    networks:
+      - executor-network
+    deploy:
+      resources:
+        limits:
+          memory: "128M"
+          cpus: "0.3"
 
   go-executor:
     build:
       context: .
       dockerfile: Dockerfile.golang
     container_name: go-executor
-    restart: always
+    networks:
+      - executor-network
+    deploy:
+      resources:
+        limits:
+          memory: "200M"
+          cpus: "0.5"   
       
-
   js-executor:
     build:
       context: .
       dockerfile: Dockerfile.js
     container_name: js-executor
-    restart: always
+    networks:
+      - executor-network
+    deploy:
+      resources:
+        limits:
+          memory: "128M"
+          cpus: "0.3"
 
+networks:
+  executor-network:
+    driver: bridge

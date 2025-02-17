@@ -19,7 +19,7 @@
             "headers": [],
             "body": {
                 "type": "json",
-                "raw": "{\n  \"language\": \"go\",\n  \"method\": \"docker\",\n  \"code\": \"package main\\nimport \\\"fmt\\\"\\nfunc main() {\\n    fmt.Println(\\\"Hello, World!\\\")\\n    a := 5\\n    b := 3\\n    sum := a + b\\n    fmt.Printf(\\\"The sum of %d and %d is %d\\\\n\\\", a, b, sum)\\n}\"\n}\n",
+                "raw": "{\n  \"language\": \"go\",\n  \"code\": \"package main\\nimport \\\"fmt\\\"\\nfunc main() {\\n    fmt.Println(\\\"Hello, World!\\\")\\n    a := 5\\n    b := 3\\n    sum := a + b\\n    fmt.Printf(\\\"The sum of %d and %d is %d\\\\n\\\", a, b, sum)\\n}\"\n}\n",
                 "form": []
             }
         },
@@ -36,7 +36,7 @@
             "headers": [],
             "body": {
                 "type": "json",
-                "raw": "{\n  \"language\": \"python\",\n  \"method\": \"docker\",\n  \"code\": \"a = 5\\nb = 3\\nprint(\\\"Hello, World!\\\")\\nprint(f\\\"The sum of {a} and {b} is {a + b}\\\")\"\n}\n",
+                "raw": "{\n  \"language\": \"python\",\n  \"code\": \"a = 5\\nb = 3\\nprint(\\\"Hello, World!\\\")\\nprint(f\\\"The sum of {a} and {b} is {a + b}\\\")\"\n}\n",
                 "form": []
             }
         },
@@ -53,7 +53,7 @@
             "headers": [],
             "body": {
                 "type": "json",
-                "raw": "{\n  \"language\": \"nodejs\",\n  \"method\": \"docker\",\n  \"code\": \"console.log('Hello, World!');\\nconst a = 5;\\nconst b = 3;\\nconst sum = a + b;\\nconsole.log(`The sum of ${a} and ${b} is ${sum}`);\"\n}\n",
+                "raw": "{\n  \"language\": \"nodejs\",\n  \"code\": \"console.log('Hello, World!');\\nconst a = 5;\\nconst b = 3;\\nconst sum = a + b;\\nconsole.log(`The sum of ${a} and ${b} is ${sum}`);\"\n}\n",
                 "form": []
             }
         }

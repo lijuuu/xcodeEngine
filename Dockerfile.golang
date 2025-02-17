@@ -1,5 +1,26 @@
-FROM golang:1.22-alpine
+# Merged stage: Precompile Go executor with warmup
+FROM golang:1.22.5-alpine
+
 WORKDIR /app
-COPY entrypoint.sh /app/
-RUN chmod +x /app/entrypoint.sh
-CMD ["/app/entrypoint.sh"]
+
+# Install minimal essential build tools (needed for Go compilation)
+RUN apk add --no-cache gcc musl-dev
+
+# Copy warmup script and initialize Go modules (if needed)
+COPY warmup.go warmup.go
+RUN go mod init warmup && go mod tidy
+
+# Set optimized environment variables
+ENV CGO_ENABLED=0 \
+  GOOS=linux \
+  GOGC=100 \
+  GOMAXPROCS=1
+
+# Precompile and warm up Go runtime
+RUN go run warmup.go
+
+# Ensure the app can run (add temp directory for any necessary writes)
+RUN mkdir -p /app/temp && chmod 777 /app/temp
+
+# Command to run the application (tail to keep the container running)
+CMD ["tail", "-f", "/dev/null"]

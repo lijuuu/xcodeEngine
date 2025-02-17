@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"rce-service/lang"
+	"sync"
 )
 
 var (
@@ -27,9 +28,10 @@ type ExecutionResponse struct {
 }
 
 type ExecutionService struct {
-	containers  map[string]string
-	RateLimiter *RateLimiter
-	Sanitizer   *CodeSanitizer
+	containers   map[string]string
+	RateLimiter  *RateLimiter
+	Sanitizer    *CodeSanitizer
+	responsePool sync.Pool
 }
 
 func NewExecutionService() *ExecutionService {
@@ -41,6 +43,11 @@ func NewExecutionService() *ExecutionService {
 		},
 		RateLimiter: NewRateLimiter(),
 		Sanitizer:   NewCodeSanitizer(10000),
+		responsePool: sync.Pool{
+			New: func() interface{} {
+				return &ExecutionResponse{}
+			},
+		},
 	}
 }
 
@@ -51,8 +58,13 @@ func (s *ExecutionService) HandleExecute(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Get response object from pool
+	resp := s.responsePool.Get().(*ExecutionResponse)
+	defer s.responsePool.Put(resp)
+	*resp = ExecutionResponse{} // Reset fields
+
 	// Check required fields and method
-	if req.Language == "" || req.Code == "" || req.Method != "docker" {
+	if req.Language == "" || req.Code == "" {
 		http.Error(w, ErrInvalidRequest.Error(), http.StatusBadRequest)
 		return
 	}
@@ -66,33 +78,30 @@ func (s *ExecutionService) HandleExecute(w http.ResponseWriter, r *http.Request)
 
 	// Sanitize code
 	if err := s.Sanitizer.SanitizeCode(req.Code, req.Language); err != nil {
-		response := ExecutionResponse{
-			Error:         err.Error(),
-			StatusMessage: "Code Sanitization Error",
-		}
+		resp.Error = err.Error()
+		resp.StatusMessage = "Code Sanitization Error"
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
 	// Execute code
 	output, err := executeLanguageCode(containerName, req.Language, req.Code)
-	response := ExecutionResponse{
-		Output:        output,
-		StatusMessage: "Accepted",
-	}
+	resp.Output = output
+	resp.StatusMessage = "Accepted"
 
 	if err != nil {
-		response.Error = err.Error()
-		response.StatusMessage = "Runtime Error"
+		resp.Error = err.Error()
+		resp.StatusMessage = "Runtime Error"
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK) 
-		json.NewEncoder(w).Encode(response)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func executeLanguageCode(containerName, language, code string) (string, error) {
