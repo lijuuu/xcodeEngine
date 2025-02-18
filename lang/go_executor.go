@@ -10,19 +10,19 @@ import (
 )
 
 func ExecuteGoCode(containerName, code string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Modified build command to properly suppress all build output
 	cmdStr := fmt.Sprintf(`cd /app/temp && 
 		echo '%s' > main.go && 
 		go build -o prog main.go && 
-		./prog && 
-		rm -f main.go prog`,
+		./prog`,
 		strings.ReplaceAll(code, "'", "'\\''"))
+		
+	start := time.Now()
 
 	cmd := exec.CommandContext(ctx, "docker", "exec", containerName, "sh", "-c", cmdStr)
-
 	output := &bytes.Buffer{}
 	cmd.Stdout = output
 	cmd.Stderr = output
@@ -33,6 +33,9 @@ func ExecuteGoCode(containerName, code string) (string, error) {
 		}
 		return output.String(), fmt.Errorf("execution error: %w", err)
 	}
+
+	elapsed := time.Since(start)
+	fmt.Printf("Build time: %s\n", elapsed)
 
 	return output.String(), nil
 }

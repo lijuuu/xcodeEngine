@@ -3,12 +3,12 @@ import threading
 import time
 import json
 
-URL = "http://localhost:8080/execute"
+URL = "http://localhost:8000/execute"
 
 # curl -i localhost:8080/run -X POST --data '' -H 'Content-Type: application/json'
 PAYLOAD = {"code":"package main\r\n\r\nimport \"fmt\"\r\n\r\nfunc main() {\r\n    fmt.Println(\"Hello, Go!\")\r\n}","id":"123","variant":"go","language":"go"}
 HEADERS = {"Content-Type": "application/json"}
-NUM_THREADS = 1  # Adjust as needed
+NUM_THREADS = 5  # Adjust as needed
 NUM_REQUESTS_PER_THREAD = 100  # Adjust as needed
 
 log_lock = threading.Lock()
@@ -23,7 +23,7 @@ def send_request(thread_id):
             duration = time.time() - start_time
             with log_lock:
                 request_count += 1
-                print(f"Thread {thread_id}: Sent request {request_count},ResponeBody:{response.json()}, Status: {response.status_code}, Time: {duration:.4f}s")
+                print(f"Thread {thread_id}: Sent request {request_count},ResponseBody:{response.json()}, Status: {response.status_code}, Time: {duration:.4f}s")
         except requests.exceptions.RequestException as e:
             with log_lock:
                 print(f"Thread {thread_id}: Request failed - {e}")

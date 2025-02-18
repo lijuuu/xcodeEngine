@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # cAdvisor Metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Go Executor Metrics
+  - job_name: 'go-executor'
+    static_configs:
+      - targets: ['go-executor:8080']
+
+  # Python Executor Metrics
+  - job_name: 'python-executor'
+    static_configs:
+      - targets: ['python-executor:8080']
+
+  # JS Executor Metrics
+  - job_name: 'js-executor'
+    static_configs:
+      - targets: ['js-executor:8080']

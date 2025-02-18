@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const DefaultPort = "8080"
+const DefaultPort = "8000"
 
 func main() {
 	service := pkg.NewExecutionService()

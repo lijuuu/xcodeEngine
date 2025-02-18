@@ -1,6 +1,7 @@
 
-services:
 
+services:
+  # 🐍 Python Code Executor
   python-executor:
     build:
       context: .
@@ -12,8 +13,9 @@ services:
       resources:
         limits:
           memory: "128M"
-          cpus: "0.3"
-
+          cpus: "0.1"
+  
+  # 🚀 Go Code Executor
   go-executor:
     build:
       context: .
@@ -24,9 +26,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: "200M"
-          cpus: "0.5"   
-      
+          memory: "256M"
+          cpus: "0.5"
+
+  # ⚡ JavaScript Code Executor
   js-executor:
     build:
       context: .
@@ -38,8 +41,53 @@ services:
       resources:
         limits:
           memory: "128M"
-          cpus: "0.3"
+          cpus: "0.1"
+
+  # # 📊 Prometheus (Monitoring)
+  # prometheus:
+  #   image: prom/prometheus
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     - executor-network
+
+  # # 📉 Grafana (Visualization)
+  # grafana:
+  #   image: grafana/grafana
+  #   container_name: grafana
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - executor-network
+  #   depends_on:
+  #     - prometheus
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER=admin
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #   volumes:
+  #     - grafana-data:/var/lib/grafana
+
+  # # 📡 cAdvisor (Container Metrics)
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:v0.47.2
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - executor-network
+  #   depends_on:
+  #     - prometheus
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /sys:/sys
+  #     - /var/lib/docker:/var/lib/docker:ro
 
 networks:
   executor-network:
     driver: bridge
+
+# volumes:
+#   grafana-data:
+#     driver: local
