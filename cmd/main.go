@@ -1,46 +1,34 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
-	"net/http"
 	"os"
 	"rce-service/pkg"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
-
-const DefaultPort = "8000"
 
 func main() {
 	service := pkg.NewExecutionService()
-	r := mux.NewRouter()
+	r := gin.Default()
 
-	// Middleware - logs each request and increments Prometheus counter
-	r.Use(pkg.LoggingMiddleware)
-
-	// Root route ("/") responds with a simple message
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Set content type header and send JSON response
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{
-			"message": "Hey there, checkout https://github.com/lijuu/SandboxedCodeExecution",
+	// API routes
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Go Code Execution Service",
 		})
 	})
 
-	// POST route "/execute" to handle the execution request
-	r.HandleFunc("/execute", service.HandleExecute).Methods("POST")
+	r.POST("/execute", service.HandleExecute)
 
-	// Get the port from the environment variable, or use the default
+	// Get port from environment or use default
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = DefaultPort
+		port = "8000"
 	}
 
-	// Log that the server is starting and listen for requests
 	log.Printf("Starting server on port %s...", port)
-	if err := http.ListenAndServe(":"+port, r); err != nil {
-		log.Fatalf("Could not start server: %v", err)
+	if err := r.Run(":" + port); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
 	}
 }

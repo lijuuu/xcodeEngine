@@ -1,24 +1,20 @@
 package pkg
 
 import (
-	"encoding/json"
 	"errors"
-	"log"
-	"net/http"
 	"rce-service/lang"
-	"sync"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
-	ErrInvalidRequest       = errors.New("invalid request parameters")
-	ErrLanguageNotSupported = errors.New("language not supported")
-	ErrMethodNotSupported   = errors.New("method not supported")
+	ErrInvalidRequest = errors.New("invalid request parameters")
+	ErrCodeTooLong    = errors.New("code exceeds maximum length")
 )
 
 type ExecutionRequest struct {
-	Language string `json:"language"`
-	Code     string `json:"code"`
-	Method   string `json:"method"`
+	Code     string `json:"code" binding:"required"`
+	Language string `json:"language" binding:"required"`
 }
 
 type ExecutionResponse struct {
@@ -28,98 +24,54 @@ type ExecutionResponse struct {
 }
 
 type ExecutionService struct {
-	containers   map[string]string
-	RateLimiter  *RateLimiter
-	Sanitizer    *CodeSanitizer
-	responsePool sync.Pool
+	containerName map[string]string
+	maxCodeLen    int
 }
 
 func NewExecutionService() *ExecutionService {
 	return &ExecutionService{
-		containers: map[string]string{
-			"python": "python-executor",
-			"go":     "go-executor",
-			"nodejs": "js-executor",
+		containerName: map[string]string{
+			"go":     "worker",
+			"python": "worker",
+			"js":     "worker",
+			"cpp":    "worker",
 		},
-		RateLimiter: NewRateLimiter(),
-		Sanitizer:   NewCodeSanitizer(10000),
-		responsePool: sync.Pool{
-			New: func() interface{} {
-				return &ExecutionResponse{}
-			},
-		},
+		maxCodeLen: 10000,
 	}
 }
 
-func (s *ExecutionService) HandleExecute(w http.ResponseWriter, r *http.Request) {
+func (s *ExecutionService) HandleExecute(c *gin.Context) {
 	var req ExecutionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request format", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, ExecutionResponse{
+			Error:         err.Error(),
+			StatusMessage: "Invalid Request Format",
+		})
 		return
 	}
 
-	// Get response object from pool
-	resp := s.responsePool.Get().(*ExecutionResponse)
-	defer s.responsePool.Put(resp)
-	*resp = ExecutionResponse{} // Reset fields
-
-	// Check required fields and method
-	if req.Language == "" || req.Code == "" {
-		http.Error(w, ErrInvalidRequest.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Validate language support
-	containerName, supported := s.containers[req.Language]
-	if !supported {
-		http.Error(w, ErrLanguageNotSupported.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Sanitize code
-	if err := s.Sanitizer.SanitizeCode(req.Code, req.Language); err != nil {
-		resp.Error = err.Error()
-		resp.StatusMessage = "Code Sanitization Error"
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(resp)
+	// Check code length
+	if len(req.Code) > s.maxCodeLen {
+		c.JSON(400, ExecutionResponse{
+			Error:         ErrCodeTooLong.Error(),
+			StatusMessage: "Code Too Long",
+		})
 		return
 	}
 
 	// Execute code
-	output, err := executeLanguageCode(containerName, req.Language, req.Code)
-	resp.Output = output
-	resp.StatusMessage = "Accepted"
-
+	output, err := lang.Execute(s.containerName[req.Language], req.Language, req.Code)
 	if err != nil {
-		resp.Error = err.Error()
-		resp.StatusMessage = "Runtime Error"
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(resp)
+		c.JSON(400, ExecutionResponse{
+			Error:         err.Error(),
+			StatusMessage: "Runtime Error",
+			Output:        output, // Include output even if there's an error
+		})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
-}
-
-func executeLanguageCode(containerName, language, code string) (string, error) {
-	switch language {
-	case "python":
-		return lang.ExecutePythonCode(containerName, code)
-	case "go":
-		return lang.ExecuteGoCode(containerName, code)
-	case "nodejs":
-		return lang.ExecuteJsCode(containerName, code)
-	default:
-		return "", ErrLanguageNotSupported
-	}
-}
-
-func LoggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Received request: %s %s", r.Method, r.URL)
-		next.ServeHTTP(w, r)
+	c.JSON(200, ExecutionResponse{
+		Output:        output,
+		StatusMessage: "Success",
 	})
 }

@@ -1,93 +1,19 @@
 
-
 services:
-  # 🐍 Python Code Executor
-  python-executor:
+  # ⚡ Global Code Executor
+  worker:
     build:
       context: .
-      dockerfile: Dockerfile.python
-    container_name: python-executor
+      dockerfile: Dockerfile.worker
+    container_name: worker
     networks:
       - executor-network
     deploy:
       resources:
         limits:
-          memory: "128M"
-          cpus: "0.1"
-  
-  # 🚀 Go Code Executor
-  go-executor:
-    build:
-      context: .
-      dockerfile: Dockerfile.golang
-    container_name: go-executor
-    networks:
-      - executor-network
-    deploy:
-      resources:
-        limits:
-          memory: "256M"
-          cpus: "0.5"
-
-  # ⚡ JavaScript Code Executor
-  js-executor:
-    build:
-      context: .
-      dockerfile: Dockerfile.js
-    container_name: js-executor
-    networks:
-      - executor-network
-    deploy:
-      resources:
-        limits:
-          memory: "128M"
-          cpus: "0.1"
-
-  # # 📊 Prometheus (Monitoring)
-  # prometheus:
-  #   image: prom/prometheus
-  #   container_name: prometheus
-  #   volumes:
-  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
-  #   ports:
-  #     - "9090:9090"
-  #   networks:
-  #     - executor-network
-
-  # # 📉 Grafana (Visualization)
-  # grafana:
-  #   image: grafana/grafana
-  #   container_name: grafana
-  #   ports:
-  #     - "3000:3000"
-  #   networks:
-  #     - executor-network
-  #   depends_on:
-  #     - prometheus
-  #   environment:
-  #     - GF_SECURITY_ADMIN_USER=admin
-  #     - GF_SECURITY_ADMIN_PASSWORD=admin
-  #   volumes:
-  #     - grafana-data:/var/lib/grafana
-
-  # # 📡 cAdvisor (Container Metrics)
-  # cadvisor:
-  #   image: gcr.io/cadvisor/cadvisor:v0.47.2
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - executor-network
-  #   depends_on:
-  #     - prometheus
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - /sys:/sys
-  #     - /var/lib/docker:/var/lib/docker:ro
+          memory: "500M"
+          cpus: "1"
 
 networks:
   executor-network:
     driver: bridge
-
-# volumes:
-#   grafana-data:
-#     driver: local

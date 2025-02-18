@@ -106,7 +106,7 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 			`os\.Exit`,
 			`panic\(`,
 		}
-	case "nodejs":
+	case "js":
 		if strings.Contains(code, "require") || strings.Contains(code, "import") {
 			restrictedPatterns = []string{
 				`require\(.*\)`, `import\s+.*\s+from`, `import\s*{.*}`,
@@ -114,10 +114,10 @@ func (s *CodeSanitizer) SanitizeCode(code, language string) error {
 		}
 		restrictedPatterns = append(restrictedPatterns, []string{
 			`process`, `global`, `Buffer`,
-			`__proto__`, `prototype`, 
-			`fs`, `child_process`, 
-			`eval`, `Function`, 
-			`process\.env`, 
+			`__proto__`, `prototype`,
+			`fs`, `child_process`,
+			`eval`, `Function`,
+			`process\.env`,
 		}...)
 	default:
 		return errors.New("unsupported language: " + language)
