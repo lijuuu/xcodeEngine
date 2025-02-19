@@ -1,0 +1,19 @@
+2025/02/19 15:01:15 Connected to Docker (API Version: 1.47)
+2025/02/19 15:01:15 Worker 1 started
+2025/02/19 15:01:15 Worker 2 started
+2025/02/19 15:01:20 Container e41b6a2a14d2 marked for restart: missing=false, state=error
+2025/02/19 15:01:20 Restarting container: e41b6a2a14d2
+2025/02/19 15:01:20 Container pool below target size (1/2), starting 1 new container(s)
+2025/02/19 15:01:20 Started worker container: 248009c39b0e
+2025/02/19 15:01:40 Connected to Docker (API Version: 1.47)
+2025/02/19 15:01:40 Worker 1 started
+2025/02/19 15:01:40 Worker 2 started
+2025/02/19 15:02:00 Container 248009c39b0e marked for restart: missing=true, state=idle
+2025/02/19 15:02:00 Container 497c02b1a26e marked for restart: missing=true, state=idle
+2025/02/19 15:02:00 Restarting container: 248009c39b0e
+2025/02/19 15:02:00 Failed to remove container 248009c39b0e: Error response from daemon: No such container: 248009c39b0e40bf52e12478b8686337abf75ee064aee4e9a41dc29ae6811b08
+2025/02/19 15:02:00 Restarting container: 497c02b1a26e
+2025/02/19 15:02:00 Failed to remove container 497c02b1a26e: Error response from daemon: No such container: 497c02b1a26e1ebdac2cfc9ec211c3e5190c015f0c104f879ffe417abfbc8625
+2025/02/19 15:02:00 Container pool below target size (0/2), starting 2 new container(s)
+2025/02/19 15:02:00 Started worker container: 76bfbc83717d
+2025/02/19 15:02:01 Started worker container: 6cafe04ed544

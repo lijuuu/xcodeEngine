@@ -2,8 +2,8 @@ const http = require('k6/http');
 const { check, sleep } = require('k6');
 
 export let options = {
-  vus: 3,  // Number of virtual users
-  duration: '30s',  // Test duration
+  vus: 5,  // Number of virtual users
+  duration: '1000s',  // Test duration
 };
 
 //ec2-44-203-148-222.compute-1.amazonaws.com

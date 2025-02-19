@@ -1,0 +1,16 @@
+[Unit]
+Description=Worker Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/worker
+Restart=always
+User=root
+Environment=PORT=8000
+WorkingDirectory=/usr/local/bin
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=worker-service
+
+[Install]
+WantedBy=multi-user.target
