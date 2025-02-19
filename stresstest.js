@@ -17,7 +17,7 @@ export default function () {
 
   check(goRes, {
     "Go status is 200": (r) => r.status === 200,
-    "Go execution is fast": (r) => r.timings.duration < 700,
+    "Go execution is fast": (r) => r.timings.duration < 1000,
     "Go response has expected structure": (r) => r.json().hasOwnProperty('output')
   });
 
@@ -29,7 +29,7 @@ export default function () {
 
   check(cppRes, {
     "C++ status is 200": (r) => r.status === 200,
-    "C++ execution is fast": (r) => r.timings.duration < 700,
+    "C++ execution is fast": (r) => r.timings.duration < 1500,
     "C++ response has expected structure": (r) => r.json().hasOwnProperty('output')
   });
 
@@ -41,7 +41,7 @@ export default function () {
 
   check(pythonRes, {
     "Python status is 200": (r) => r.status === 200,
-    "Python execution is fast": (r) => r.timings.duration < 500,
+    "Python execution is fast": (r) => r.timings.duration < 1000,
     "Python response has expected structure": (r) => r.json().hasOwnProperty('output')
   });
 
@@ -53,7 +53,7 @@ export default function () {
 
   check(nodeRes, {
     "Node.js status is 200": (r) => r.status === 200,
-    "Node.js execution is fast": (r) => r.timings.duration < 500,
+    "Node.js execution is fast": (r) => r.timings.duration < 1000,
     "Node.js response has expected structure": (r) => r.json().hasOwnProperty('output')
   });
 

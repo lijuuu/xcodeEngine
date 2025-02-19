@@ -12,12 +12,7 @@ RUN apk add --no-cache \
     curl \
     bash
 
-# Copy warmup files
-COPY warmup.go .
-
-# Initialize Go module and warm up
-RUN go mod init warmup && \
-    go run warmup.go
+RUN go build -v -o /dev/null std
 
 # Ensure the app can run (add temp directory for any necessary writes)
 RUN mkdir -p /app/temp && chmod 777 /app/temp

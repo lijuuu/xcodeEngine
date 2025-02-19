@@ -1,10 +1,11 @@
-package pkg
+package routes
 
 import (
 	"errors"
-	"rce-service/lang"
+	"xcodeengine/executor"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -24,23 +25,16 @@ type ExecutionResponse struct {
 }
 
 type ExecutionService struct {
-	containerName map[string]string
-	maxCodeLen    int
+	maxCodeLen int
 }
 
 func NewExecutionService() *ExecutionService {
 	return &ExecutionService{
-		containerName: map[string]string{
-			"go":     "worker",
-			"python": "worker",
-			"js":     "worker",
-			"cpp":    "worker",
-		},
 		maxCodeLen: 10000,
 	}
 }
 
-func (s *ExecutionService) HandleExecute(c *gin.Context) {
+func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.WorkerPool) {
 	var req ExecutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, ExecutionResponse{
@@ -59,19 +53,20 @@ func (s *ExecutionService) HandleExecute(c *gin.Context) {
 		return
 	}
 
-	// Execute code
-	output, err := lang.Execute(s.containerName[req.Language], req.Language, req.Code)
-	if err != nil {
+	// Execute code using worker pool
+	output := workerPool.ExecuteJob(req.Language, req.Code)
+	logrus.Println("Request: ", req, "Response: ", output)
+	if output.Error != nil {
 		c.JSON(400, ExecutionResponse{
-			Error:         err.Error(),
+			Error:         output.Error.Error(),
 			StatusMessage: "Runtime Error",
-			Output:        output, // Include output even if there's an error
+			Output:        output.Output,
 		})
 		return
 	}
 
 	c.JSON(200, ExecutionResponse{
-		Output:        output,
+		Output:        output.Output,
 		StatusMessage: "Success",
 	})
 }
