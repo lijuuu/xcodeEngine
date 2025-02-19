@@ -2,6 +2,11 @@
 
 all: install-docker build-docker build-go setup-service setup-nginx
 
+init-repo:
+	@sudo apt-get install -y git go
+	@git clone https://github.com/lijuuu/xcodeEngine.git
+	@cd xcodeEngine
+
 # Install Docker
 install-docker:
 	@echo "Installing Docker..."
