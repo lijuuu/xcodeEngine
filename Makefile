@@ -1,6 +1,6 @@
-.PHONY: all install-docker build-docker build-go setup-service setup-nginx
+.PHONY: all init-repo install-docker build-docker build-go setup-service setup-nginx
 
-all: install-docker build-docker build-go setup-service setup-nginx
+all: init-repo install-docker build-docker build-go setup-service setup-nginx
 
 init-repo:
 	@sudo apt-get install -y git go
