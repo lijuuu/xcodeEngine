@@ -126,7 +126,7 @@ var dockerLogFile *os.File
 // Initialize the Docker log file
 func init() {
 	var err error
-	dockerLogFile, err = os.OpenFile("docker_operations.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	dockerLogFile, err = os.OpenFile("/logs/container.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Failed to open Docker log file: %v", err)
 	}
