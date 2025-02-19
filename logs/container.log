@@ -17,3 +17,438 @@
 2025/02/19 15:02:00 Container pool below target size (0/2), starting 2 new container(s)
 2025/02/19 15:02:00 Started worker container: 76bfbc83717d
 2025/02/19 15:02:01 Started worker container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:38 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:38 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:39 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:39 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:39 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:39 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:39 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:40 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:40 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:41 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:41 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:41 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:41 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:41 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:41 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:41 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:41 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:41 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:42 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:42 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:42 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:42 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:42 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:42 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:42 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:42 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:42 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:42 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:42 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:43 Worker 1 executing job in container: 6cafe04ed544
+2025/02/19 15:06:43 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:44 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:44 Worker 2 executing job in container: 76bfbc83717d
+2025/02/19 15:06:44 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:44 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:44 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:44 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:45 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:45 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:45 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:45 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:45 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:45 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Worker 2 executing job in container: 6cafe04ed544
+2025/02/19 15:06:45 Worker 1 executing job in container: 76bfbc83717d
+2025/02/19 15:06:45 Container 76bfbc83717d has high error count (41), marking for restart
+2025/02/19 15:06:45 Container 6cafe04ed544 has high error count (34), marking for restart
+2025/02/19 15:06:45 Restarting container: 76bfbc83717d
+2025/02/19 15:06:45 Restarting container: 6cafe04ed544
+2025/02/19 15:06:45 Container pool below target size (0/2), starting 2 new container(s)
+2025/02/19 15:06:46 Started worker container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Started worker container: b7434377100e
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:46 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:47 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:47 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:47 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:47 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:47 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:47 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:47 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:47 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:47 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:48 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:48 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:48 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:48 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:48 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:48 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:48 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:49 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:49 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:49 Worker 1 executing job in container: b7434377100e
+2025/02/19 15:06:49 Worker 2 executing job in container: b7434377100e
+2025/02/19 15:06:50 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:50 Worker 2 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:50 Worker 1 executing job in container: d7876cfe9ef6
+2025/02/19 15:06:50 Container d7876cfe9ef6 has high error count (30), marking for restart
+2025/02/19 15:06:50 Container b7434377100e has high error count (18), marking for restart
+2025/02/19 15:06:50 Restarting container: d7876cfe9ef6
+2025/02/19 15:06:50 Restarting container: b7434377100e
+2025/02/19 15:06:50 Container pool below target size (0/2), starting 2 new container(s)
+2025/02/19 15:06:51 Started worker container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Started worker container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:51 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:51 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:52 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:52 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:52 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:53 Worker 2 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 1 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:54 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:54 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:54 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:54 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:54 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:54 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:54 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:54 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:55 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:55 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:55 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:55 Worker 1 executing job in container: 523fcf25dd20
+2025/02/19 15:06:55 Worker 2 executing job in container: 94d1fb1328e3
+2025/02/19 15:06:55 Container 94d1fb1328e3 has high error count (24), marking for restart
+2025/02/19 15:06:55 Container 523fcf25dd20 has high error count (21), marking for restart
+2025/02/19 15:06:55 Restarting container: 94d1fb1328e3
+2025/02/19 15:06:55 Restarting container: 523fcf25dd20
+2025/02/19 15:06:55 Container pool below target size (0/2), starting 2 new container(s)
+2025/02/19 15:06:56 Started worker container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Started worker container: 28d4559cb05e
+2025/02/19 15:06:56 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:56 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:56 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:57 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:57 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:57 Worker 1 executing job in container: d15a06b84ca8
+2025/02/19 15:06:57 Worker 2 executing job in container: 28d4559cb05e
+2025/02/19 15:06:57 Worker 2 executing job in container: 28d4559cb05e
+2025/02/19 15:06:57 Worker 1 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:58 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:59 Worker 1 executing job in container: d15a06b84ca8
+2025/02/19 15:06:59 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:59 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:59 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:59 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:59 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:59 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:59 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:59 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:06:59 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:59 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:06:59 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:07:00 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:07:00 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:07:00 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:07:00 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:07:00 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:07:00 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:07:00 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:07:00 Worker 1 executing job in container: 28d4559cb05e
+2025/02/19 15:07:00 Worker 2 executing job in container: d15a06b84ca8
+2025/02/19 15:07:00 Worker 1 executing job in container: d15a06b84ca8
+2025/02/19 15:07:00 Container d15a06b84ca8 has high error count (28), marking for restart
+2025/02/19 15:07:00 Container 28d4559cb05e has high error count (21), marking for restart
+2025/02/19 15:07:00 Restarting container: d15a06b84ca8
+2025/02/19 15:07:00 Restarting container: 28d4559cb05e
+2025/02/19 15:07:00 Container pool below target size (0/2), starting 2 new container(s)
+2025/02/19 15:07:01 Started worker container: ca99455d4116
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Started worker container: 28812c4baf42
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:01 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:01 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:02 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:03 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:04 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:04 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:04 Worker 1 executing job in container: 28812c4baf42
+2025/02/19 15:07:04 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:05 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:05 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:05 Worker 2 executing job in container: ca99455d4116
+2025/02/19 15:07:05 Worker 1 executing job in container: ca99455d4116
+2025/02/19 15:07:05 Container ca99455d4116 has high error count (33), marking for restart
+2025/02/19 15:07:05 Container 28812c4baf42 has high error count (15), marking for restart
+2025/02/19 15:07:05 Restarting container: ca99455d4116
+2025/02/19 15:07:05 Restarting container: 28812c4baf42
+2025/02/19 15:07:05 Container pool below target size (0/2), starting 2 new container(s)
+2025/02/19 15:07:06 Started worker container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Started worker container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:06 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:07 Worker 1 executing job in container: fa4944e50c2e
+2025/02/19 15:07:07 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:07 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:07 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:08 Worker 2 executing job in container: fa4944e50c2e
+2025/02/19 15:07:08 Worker 1 executing job in container: 7401ca7a18b2
+2025/02/19 15:07:10 Container 7401ca7a18b2 has high error count (23), marking for restart
+2025/02/19 15:07:10 Container fa4944e50c2e has high error count (7), marking for restart
+2025/02/19 15:07:10 Restarting container: 7401ca7a18b2
+2025/02/19 15:07:10 Restarting container: fa4944e50c2e
+2025/02/19 15:07:10 Container pool below target size (0/2), starting 2 new container(s)
+2025/02/19 15:07:11 Started worker container: 6677ca97d69d
+2025/02/19 15:07:11 Started worker container: e8340125af52
+2025/02/19 15:07:16 Worker 2 executing job in container: 6677ca97d69d

@@ -20,13 +20,13 @@ func setupLogFile(path string) *os.File {
 
 func main() {
 	r := gin.Default()
-	logFile1 := setupLogFile("/logs/server.log")
+	logFile1 := setupLogFile("logs/server.log")
 	logrus.SetOutput(logFile1)
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	
+
 	routes := routes.NewExecutionService()
-	logFile2 := setupLogFile("/logs/container.log")
-	workerPool, _ := executor.NewWorkerPool(log.New(logFile2, "", log.LstdFlags))
+	// logFile2 := setupLogFile("/logs/container.log")
+	workerPool := executor.NewWorkerPool(2)
 	// API routes
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
