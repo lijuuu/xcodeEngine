@@ -1,18 +1,49 @@
+version: '3.8'
+
 services:
-  # ⚡ Global Code Executor
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.worker
-    container_name: worker
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: always
     networks:
-      - executor-network
-    deploy:
-      resources:
-        limits:
-          memory: "500M"
-          cpus: "1"
+      - monitoring
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    privileged: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys:/sys
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: always
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: always
+    networks:
+      - monitoring
 
 networks:
-  executor-network:
-    driver: bridge
+  monitoring:
+
+volumes:
+  grafana-data:

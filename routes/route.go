@@ -1,7 +1,10 @@
 package routes
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"time"
 	"xcodeengine/executor"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +25,7 @@ type ExecutionResponse struct {
 	Output        string `json:"output"`
 	Error         string `json:"error,omitempty"`
 	StatusMessage string `json:"status_message"`
+	ExecutionTime string `json:"execution_time,omitempty"`
 }
 
 type ExecutionService struct {
@@ -44,6 +48,16 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 		return
 	}
 
+	start := time.Now()
+	codeBytes, err := base64.StdEncoding.DecodeString(req.Code)
+	if err != nil {
+		c.JSON(400, "Failed to decode Base64")
+		return
+	}
+
+	code := string(codeBytes)
+	fmt.Println("Time taken to decode base64: ", time.Since(start))
+
 	// Check code length
 	if len(req.Code) > s.maxCodeLen {
 		c.JSON(400, ExecutionResponse{
@@ -54,7 +68,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	}
 
 	// Execute code using worker pool
-	output := workerPool.ExecuteJob(req.Language, req.Code)
+	output := workerPool.ExecuteJob(req.Language, code)
 	logrus.Println("Request: ", req, "Response: ", output)
 	if output.Error != nil {
 		c.JSON(400, ExecutionResponse{
@@ -68,5 +82,6 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	c.JSON(200, ExecutionResponse{
 		Output:        output.Output,
 		StatusMessage: "Success",
+		ExecutionTime: output.ExecutionTime.String(),
 	})
 }

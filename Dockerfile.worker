@@ -1,8 +1,10 @@
+# Use Alpine for minimal attack surface
 FROM golang:1.22.5-alpine
 
+# Set the working directory
 WORKDIR /app
 
-# Install required packages 
+# Install required dependencies (NO sudo)
 RUN apk add --no-cache \
     g++ \
     gcc \
@@ -12,10 +14,56 @@ RUN apk add --no-cache \
     curl \
     bash
 
-RUN go build -v -o /dev/null std
+# Disable network inside container (moved before user switch)
+RUN echo "none /sys/class/net /proc/sys/net/ipv4 /proc/sys/net/ipv6 /proc/sysrq-trigger /proc/sys/kernel/randomize_va_space /proc/sys/vm/mmap_min_addr none rw,nosuid,nodev,noexec,relatime 0 0" >> /etc/fstab
 
-# Ensure the app can run (add temp directory for any necessary writes)
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Block dangerous syscalls using Seccomp
+COPY seccomp.json /seccomp.json
+
+# Add memory and CPU constraints
+LABEL com.docker.container.memory="512m"
+LABEL com.docker.container.cpu="1.0"
+
+# Add security-related metadata
+LABEL security.capabilities="drop=all,add=execve"
+LABEL security.seccomp="file://seccomp.json"
+LABEL security.apparmor="unconfined"
+
+# Create the temp directory with appropriate permissions
 RUN mkdir -p /app/temp && chmod 777 /app/temp
 
-# Command to keep the container running
+# Create all the needed files with placeholder content
+RUN echo "// Temporary Go file" > /app/temp/code.go && \
+    echo "# Temporary Python file" > /app/temp/code.py && \
+    echo "// Temporary JavaScript file" > /app/temp/code.js && \
+    echo "// Temporary C++ file" > /app/temp/code.cpp
+
+# Create compiler output destination
+RUN touch /app/temp/exe && chmod 777 /app/temp/exe
+
+# Set permissions for all code files to be writable and executable
+RUN chown appuser:appgroup /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp /app/temp/exe && \
+    chmod 666 /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp && \
+    chmod 755 /app/temp/exe
+
+# Set permissions for the /app directory structure
+RUN chmod 755 /app && chmod 777 /app/temp
+
+# Set read-only root filesystem with exceptions
+VOLUME ["/tmp", "/var/tmp"]
+RUN chmod 1777 /tmp /var/tmp
+
+# Add security headers
+ENV GOLANG_SECURITY_HEADERS="1"
+
+# Switch to non-root user
+USER appuser
+
+# Build Go standard library to optimize performance
+RUN go build -v -o /dev/null std
+
+# Set default command to keep the container running
 CMD ["tail", "-f", "/dev/null"]

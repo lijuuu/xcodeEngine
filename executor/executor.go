@@ -3,9 +3,9 @@ package executor
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -15,77 +15,85 @@ import (
 	"github.com/docker/docker/client"
 )
 
-type execConfig struct {
+const (
+	MaxWorkers = 2
+)
+
+// Language execution configurations
+var configs = map[string]struct {
 	timeout time.Duration
 	args    func(code string) []string
-}
-
-var configs = map[string]execConfig{
+}{
 	"go": {
-		timeout: 10 * time.Second,
+		timeout: 2 * time.Second,
 		args: func(code string) []string {
-			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > main.go && go run main.go || go run main.go`,
+			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.go && go run /app/temp/code.go`,
 				strings.ReplaceAll(code, "'", "'\\''"))}
 		},
 	},
 	"js": {
-		timeout: 5 * time.Second,
+		timeout: 2 * time.Second,
 		args: func(code string) []string {
-			return []string{"node", "-e", code}
+			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.js && node /app/temp/code.js`,
+				strings.ReplaceAll(code, "'", "'\\''"))}
 		},
 	},
 	"python": {
-		timeout: 5 * time.Second,
+		timeout: 2 * time.Second,
 		args: func(code string) []string {
-			return []string{"python3", "-c", code}
+			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.py && python3 /app/temp/code.py`,
+				strings.ReplaceAll(code, "'", "'\\''"))}
 		},
 	},
 	"cpp": {
-		timeout: 5 * time.Second,
+		timeout: 2 * time.Second,
 		args: func(code string) []string {
-			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > prog.cpp && g++ -o prog prog.cpp && ./prog || ./prog`,
+			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.cpp && g++ -o /app/temp/exe /app/temp/code.cpp && /app/temp/exe`,
 				strings.ReplaceAll(code, "'", "'\\''"))}
 		},
 	},
 }
 
-// Job represents an execution request.
-type Job struct {
-	Container string
-	Language  string
-	Code      string
-	Result    chan Result
-}
-
-type Result struct {
-	Output string
-	Error  error
-}
-
+// ContainerState represents the current state of a container
 type ContainerState string
 
 const (
-	StateIdle    ContainerState = "idle"
-	StateWorking ContainerState = "working"
-	StateError   ContainerState = "error"
+	StateIdle  ContainerState = "idle"
+	StateBusy  ContainerState = "busy"
+	StateError ContainerState = "error"
 )
 
+// ContainerInfo holds information about a container
 type ContainerInfo struct {
 	ID    string
 	State ContainerState
 }
 
-// WorkerPool manages concurrent execution jobs.
-type WorkerPool struct {
-	jobs         chan Job
-	numWorkers   int
-	wg           sync.WaitGroup
-	mu           sync.Mutex
-	dockerClient *client.Client
+// Job represents a code execution request
+type Job struct {
+	Language string
+	Code     string
+	Result   chan Result
 }
 
-// NewWorkerPool initializes the worker pool with a given number of workers.
-func NewWorkerPool(numWorkers int) *WorkerPool {
+// Result contains the output of code execution
+type Result struct {
+	Output        string
+	Error         error
+	ExecutionTime time.Duration
+}
+
+// WorkerPool manages a pool of docker containers for code execution
+type WorkerPool struct {
+	jobs         chan Job
+	containers   map[string]*ContainerInfo
+	mu           sync.Mutex
+	dockerClient *client.Client
+	logger       *log.Logger
+}
+
+// NewWorkerPool creates a new worker pool with specified number of containers
+func NewWorkerPool() *WorkerPool {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		log.Fatalf("Failed to create Docker client: %v", err)
@@ -93,53 +101,96 @@ func NewWorkerPool(numWorkers int) *WorkerPool {
 
 	pool := &WorkerPool{
 		jobs:         make(chan Job, 10),
-		numWorkers:   numWorkers,
+		containers:   make(map[string]*ContainerInfo),
 		dockerClient: dockerClient,
+		logger:       log.New(log.Writer(), "[WorkerPool] ", log.LstdFlags),
 	}
 
-	// Start containers for each worker
-	for i := 0; i < numWorkers; i++ {
-		if err := pool.startContainer(); err != nil {
-			log.Fatalf("Failed to start container for worker %d: %v", i, err)
-		}
+	// Initialize the container pool
+	if err := pool.initializeContainerPool(); err != nil {
+		log.Fatalf("Failed to initialize container pool: %v", err)
 	}
 
 	// Start worker goroutines
-	for i := 0; i < numWorkers; i++ {
-		go pool.worker(i)
+	for i := 0; i < MaxWorkers; i++ {
+		go pool.worker(i + 1)
 	}
 
-	// Remove excess workers if any
-	if err := pool.RemoveExcessWorkers(); err != nil {
-		log.Printf("Failed to remove excess workers: %v", err)
-	}
-
-	// Start container health check
+	// Start container monitor
 	go pool.monitorContainers()
 
 	return pool
 }
 
-// Log file for Docker operations
-var dockerLogFile *os.File
-
-// Initialize the Docker log file
-func init() {
-	var err error
-	dockerLogFile, err = os.OpenFile("/logs/container.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+// initializeContainerPool makes sure we have the right number of containers
+func (p *WorkerPool) initializeContainerPool() error {
+	// List all containers
+	containers, err := p.dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
 	if err != nil {
-		log.Fatalf("Failed to open Docker log file: %v", err)
+		return fmt.Errorf("failed to list containers: %v", err)
 	}
+
+	// Find existing worker containers
+	var workerContainers []string
+	for _, c := range containers {
+		if c.Image == "worker" {
+			workerContainers = append(workerContainers, c.ID)
+			state := StateIdle
+			if c.State != "running" {
+				state = StateError
+			}
+			p.containers[c.ID] = &ContainerInfo{
+				ID:    c.ID,
+				State: state,
+			}
+			p.logger.Printf("Found existing worker container: %s (state: %s)", shortID(c.ID), state)
+		}
+	}
+
+	// Handle container count
+	existingCount := len(workerContainers)
+	if existingCount > MaxWorkers {
+		p.logger.Printf("Found %d worker containers, removing excess...", existingCount)
+		for _, cID := range workerContainers[MaxWorkers:] {
+			p.removeContainer(cID)
+		}
+	} else if existingCount < MaxWorkers {
+		p.logger.Printf("Only %d worker containers found, creating %d more...",
+			existingCount, MaxWorkers-existingCount)
+		for i := 0; i < MaxWorkers-existingCount; i++ {
+			if err := p.startContainer(); err != nil {
+				p.logger.Printf("Failed to start container: %v", err)
+			}
+		}
+	}
+
+	// Verify we have containers
+	if len(p.containers) == 0 {
+		return errors.New("failed to initialize container pool")
+	}
+
+	return nil
 }
 
+// startContainer creates and starts a new worker container
 func (p *WorkerPool) startContainer() error {
 	ctx := context.Background()
 
+	// Check if we already have enough containers
+	p.mu.Lock()
+	containerCount := len(p.containers)
+	p.mu.Unlock()
+
+	if containerCount >= MaxWorkers {
+		p.logger.Printf("Already have %d containers, not starting new one", containerCount)
+		return nil
+	}
+
+	// Container configuration
 	config := &container.Config{
 		Image: "worker",
 		Tty:   true,
 	}
-
 	hostConfig := &container.HostConfig{
 		Resources: container.Resources{
 			Memory:   500 * 1024 * 1024, // 500MB
@@ -151,94 +202,185 @@ func (p *WorkerPool) startContainer() error {
 	// Create container
 	resp, err := p.dockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, "")
 	if err != nil {
-		logDockerOperation("Failed to create container: %v", err)
-		return fmt.Errorf("failed to create container: %w", err)
+		return fmt.Errorf("failed to create container: %v", err)
 	}
 
 	// Start container
 	if err := p.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-		logDockerOperation("Failed to start container: %v", err)
-		return fmt.Errorf("failed to start container: %w", err)
+		p.dockerClient.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
+		return fmt.Errorf("failed to start container: %v", err)
 	}
 
-	logDockerOperation("Started container: %s", resp.ID)
+	// Register container in our pool
+	p.mu.Lock()
+	p.containers[resp.ID] = &ContainerInfo{
+		ID:    resp.ID,
+		State: StateIdle,
+	}
+	p.mu.Unlock()
+
+	p.logger.Printf("Started new worker container: %s", shortID(resp.ID))
 	return nil
 }
 
-// monitorContainers checks the number of running worker containers every 2 seconds.
+// removeContainer removes a container from the pool
+func (p *WorkerPool) removeContainer(containerID string) {
+	ctx := context.Background()
+
+	// Try to remove the container
+	if err := p.dockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
+		p.logger.Printf("Failed to remove container %s: %v", shortID(containerID), err)
+	} else {
+		p.logger.Printf("Removed container: %s", shortID(containerID))
+	}
+
+	// Remove from our tracking
+	p.mu.Lock()
+	delete(p.containers, containerID)
+	p.mu.Unlock()
+}
+
+// monitorContainers checks container health periodically
 func (p *WorkerPool) monitorContainers() {
-	ticker := time.NewTicker(2 * time.Second) // Check every 2 seconds
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
-	for {
-		<-ticker.C
-		containers, err := p.dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
-		if err != nil {
-			log.Printf("Failed to list containers: %v", err)
-			continue
+	for range ticker.C {
+		p.checkContainerHealth()
+	}
+}
+
+// checkContainerHealth ensures container health and correct count
+func (p *WorkerPool) checkContainerHealth() {
+	ctx := context.Background()
+
+	// Get all containers from Docker
+	containers, err := p.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
+	if err != nil {
+		p.logger.Printf("Failed to list containers: %v", err)
+		return
+	}
+
+	// Build map of running worker containers
+	runningWorkers := make(map[string]bool)
+	for _, c := range containers {
+		if c.Image == "worker" && c.State == "running" {
+			runningWorkers[c.ID] = true
 		}
+	}
 
-		var runningWorkers []string
-		for _, container := range containers {
-			if container.State == "running" && container.Image == "worker" {
-				runningWorkers = append(runningWorkers, container.ID)
-			}
+	// Check our container states against Docker's view
+	p.mu.Lock()
+	containersToRemove := []string{}
+
+	for id, _ := range p.containers {
+		if !runningWorkers[id] {
+			// Container is not running according to Docker
+			p.logger.Printf("Container %s not running, marking for removal", shortID(id))
+			containersToRemove = append(containersToRemove, id)
 		}
+	}
 
-		runningCount := len(runningWorkers)
+	// Get current container count
+	currentCount := len(p.containers) - len(containersToRemove)
+	p.mu.Unlock()
 
-		if runningCount == 0 {
-			logDockerOperation("⚠️ No running worker containers found. Creating a new container.")
+	// Remove marked containers
+	for _, id := range containersToRemove {
+		p.removeContainer(id)
+	}
+
+	// Start new containers if needed
+	if currentCount < MaxWorkers {
+		p.logger.Printf("Container count (%d) below target (%d), starting new containers",
+			currentCount, MaxWorkers)
+		for i := 0; i < MaxWorkers-currentCount; i++ {
 			if err := p.startContainer(); err != nil {
-				logDockerOperation("❌ Failed to create a new worker container: %v", err)
+				p.logger.Printf("Failed to start replacement container: %v", err)
 			}
-		} else if runningCount > 2 {
-			logDockerOperation("⚠️ More than 2 running worker containers found: %d. Removing excess containers.", runningCount)
-			for _, containerID := range runningWorkers[2:] { // Keep only the first 2
-				if err := p.dockerClient.ContainerRemove(context.Background(), containerID, container.RemoveOptions{Force: true}); err != nil {
-					logDockerOperation("❌ Failed to remove container %s: %v", containerID, err)
-				} else {
-					logDockerOperation("✅ Removed excess container: %s", containerID)
-				}
+		}
+	} else if len(runningWorkers) > MaxWorkers {
+		p.logger.Printf("Too many running worker containers (%d), target is %d",
+			len(runningWorkers), MaxWorkers)
+
+		// Identify excess containers to remove
+		p.mu.Lock()
+		var idleContainers []string
+		for id, info := range p.containers {
+			if info.State == StateIdle {
+				idleContainers = append(idleContainers, id)
 			}
-		} else {
-			logDockerOperation("✅ Running worker containers count is sufficient: %d", runningCount)
+		}
+		p.mu.Unlock()
+
+		// Remove excess idle containers
+		excessCount := len(runningWorkers) - MaxWorkers
+		for i := 0; i < excessCount && i < len(idleContainers); i++ {
+			p.removeContainer(idleContainers[i])
 		}
 	}
 }
 
-// worker listens for jobs and processes them.
+// worker processes jobs from the queue
 func (p *WorkerPool) worker(id int) {
+	p.logger.Printf("Worker %d started", id)
+
 	for job := range p.jobs {
-		containerId, err := p.GetAvailableContainer()
+		// Get an available container
+		containerID, err := p.getAvailableContainer()
 		if err != nil {
-			job.Result <- Result{Error: fmt.Errorf("no available containers: %v", err)}
+			p.logger.Printf("Worker %d couldn't get container: %v", id, err)
+			job.Result <- Result{Error: err}
 			continue
 		}
 
-		fmt.Printf("Worker %d processing job\n", id)
-		output, err := Execute(containerId, job.Language, job.Code)
-		job.Result <- Result{Output: output, Error: err}
+		// Execute the job
+		p.logger.Printf("Worker %d executing in container %s", id, shortID(containerID))
+		p.setContainerState(containerID, StateBusy)
+
+		start := time.Now()
+		output, err := p.executeCode(containerID, job.Language, job.Code)
+		duration := time.Since(start)
+		p.setContainerState(containerID, StateIdle)
+		job.Result <- Result{Output: output, Error: err, ExecutionTime: duration}
 	}
 }
 
-// ExecuteJob submits a job to the worker pool and waits for a result.
-func (p *WorkerPool) ExecuteJob(language, code string) Result {
-	result := make(chan Result, 1)
-	job := Job{Language: language, Code: code, Result: result}
+// getAvailableContainer finds an idle container
+func (p *WorkerPool) getAvailableContainer() (string, error) {
+	maxRetries := 10
+	retryDelay := 200 * time.Millisecond
 
-	p.jobs <- job
-	return <-result // Return the Result struct containing both output and error
+	for i := 0; i < maxRetries; i++ {
+		// Try to find an idle container
+		p.mu.Lock()
+		for id, info := range p.containers {
+			if info.State == StateIdle {
+				p.mu.Unlock()
+				return id, nil
+			}
+		}
+		p.mu.Unlock()
+
+		// No idle container found, wait before retrying
+		time.Sleep(retryDelay)
+	}
+
+	return "", errors.New("no available containers after retries")
 }
 
-// Shutdown gracefully stops all workers and logs the operation.
-func (p *WorkerPool) Shutdown() {
-	close(p.jobs)
-	p.wg.Wait()
+// setContainerState updates a container's state
+func (p *WorkerPool) setContainerState(containerID string, state ContainerState) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if container, exists := p.containers[containerID]; exists {
+		container.State = state
+	}
 }
 
-// Execute runs the code inside a container and returns the output.
-func Execute(containerName, language, code string) (string, error) {
+// executeCode runs code in a container with the proper language-specific settings
+func (p *WorkerPool) executeCode(containerID, language, code string) (string, error) {
 	config, ok := configs[language]
 	if !ok {
 		return "", fmt.Errorf("unsupported language: %s", language)
@@ -247,81 +389,50 @@ func Execute(containerName, language, code string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.timeout)
 	defer cancel()
 
-	args := append([]string{"exec", containerName}, config.args(code)...)
+	args := append([]string{"exec", containerID}, config.args(code)...)
 	cmd := exec.CommandContext(ctx, "docker", args...)
 
 	var output bytes.Buffer
 	cmd.Stdout = &output
 	cmd.Stderr = &output
 
-	start := time.Now()
-	if err := cmd.Run(); err != nil {
-		if ctx.Err() == context.DeadlineExceeded {
-			return "", fmt.Errorf("execution timed out after %v", config.timeout)
-		}
+	err := cmd.Run()
+
+	if ctx.Err() == context.DeadlineExceeded {
+		return "", fmt.Errorf("execution timed out after %v", config.timeout)
+	}
+
+	if err != nil {
 		return output.String(), fmt.Errorf("execution error: %w", err)
 	}
-	duration := time.Since(start)
-	fmt.Println("Execution time:", duration)
+
 	return output.String(), nil
 }
 
-// RemoveExcessWorkers removes orphan containers with the image "worker" if there are more than 2.
-func (p *WorkerPool) RemoveExcessWorkers() error {
-	ctx := context.Background()
-	containers, err := p.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
-	if err != nil {
-		logDockerOperation("Failed to list containers: %v", err)
-		return fmt.Errorf("failed to list containers: %w", err)
-	}
-
-	var workerContainers []string
-	for _, container := range containers {
-		if container.Image == "worker" {
-			workerContainers = append(workerContainers, container.ID)
-			logDockerOperation("Found worker container: %s", container.ID)
-		}
-	}
-
-	if len(workerContainers) == 0 {
-		logDockerOperation("⚠️ No worker containers found.")
-	} else if len(workerContainers) > 2 {
-		logDockerOperation("More than 2 worker containers found: %d. Removing excess containers.", len(workerContainers))
-		for _, containerID := range workerContainers[2:] { // Keep only the first 2
-			if err := p.dockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
-				logDockerOperation("❌ Failed to remove container %s: %v", containerID, err)
-			} else {
-				logDockerOperation("✅ Removed excess container: %s", containerID)
-			}
-		}
-	} else {
-		logDockerOperation("✅ Worker container count is within limit: %d", len(workerContainers))
-	}
-
-	return nil
+// ExecuteJob submits a job to the worker pool
+func (p *WorkerPool) ExecuteJob(language, code string) Result {
+	result := make(chan Result, 1)
+	p.jobs <- Job{Language: language, Code: code, Result: result}
+	return <-result
 }
 
-// GetAvailableContainer dynamically finds an available container.
-func (p *WorkerPool) GetAvailableContainer() (string, error) {
-	ctx := context.Background()
-	containers, err := p.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
-	if err != nil {
-		return "", fmt.Errorf("failed to list containers: %w", err)
-	}
+// Shutdown stops the worker pool
+func (p *WorkerPool) Shutdown() {
+	p.logger.Println("Shutting down worker pool...")
+	close(p.jobs)
 
-	for _, container := range containers {
-		if container.State == "running" && container.Image == "worker" {
-			return container.ID, nil
-		}
+	// Clean up containers
+	p.mu.Lock()
+	for id := range p.containers {
+		p.dockerClient.ContainerRemove(context.Background(), id, container.RemoveOptions{Force: true})
 	}
-	return "", fmt.Errorf("no available containers")
+	p.mu.Unlock()
 }
 
-// LogDockerOperation logs Docker-related operations to the Docker log file.
-func logDockerOperation(format string, args ...interface{}) {
-	logMessage := fmt.Sprintf(format, args...)
-	log.Printf(logMessage) // Log to console
-	if dockerLogFile != nil {
-		dockerLogFile.WriteString(fmt.Sprintf("%s: %s\n", time.Now().Format(time.RFC3339), logMessage))
+// shortID returns a shortened container ID for logging
+func shortID(id string) string {
+	if len(id) > 12 {
+		return id[:12]
 	}
+	return id
 }
