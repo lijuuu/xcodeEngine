@@ -80,6 +80,13 @@ func sanitizePython(code string) error {
 		`exec\(`,
 		`globals\(\)\.`,
 		`locals\(\)\.`,
+		`os\.system\(`,                     // Disallow executing arbitrary commands
+		`os\.exec\(`,                       // Disallow executing arbitrary commands
+		`subprocess\.Popen\(`,              // Disallow subprocess calls
+		`os\.fork\(`,                       // Disallow forking processes
+		`threading\.Thread\s*\(.*bomb\(\)`, // Disallow recursive thread creation
+		`for\s*\(.*\s*os\.fork\(\)`,        // Disallow forking in loops
+		`while\s*True\s*:\s*os\.fork\(\)`,  // Disallow infinite forking
 	}
 
 	if matched, err := matchPatterns(dangerousOps, code); err != nil || matched {

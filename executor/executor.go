@@ -202,33 +202,16 @@ func (p *WorkerPool) startContainer() error {
 		Image: "worker",
 		Tty:   true,
 	}
-
 	seccompProfile := `{
-	"defaultAction": "SCMP_ACT_ERRNO",
-	"architectures": ["SCMP_ARCH_X86_64"],
-	"syscalls": [
-		{ "names": ["execve", "execveat"], "action": "SCMP_ACT_ALLOW" },
-		{ "names": ["exit", "exit_group"], "action": "SCMP_ACT_ALLOW" },
-		{ "names": ["write", "read"], "action": "SCMP_ACT_ALLOW" },
-		{ "names": ["brk", "mmap", "munmap"], "action": "SCMP_ACT_ALLOW" },
-		{ "names": ["rt_sigreturn", "sigreturn"], "action": "SCMP_ACT_ALLOW" },
-		{ "names": ["futex"], "action": "SCMP_ACT_ALLOW" },
-
-	
-		{ "names": ["socket", "connect", "bind", "listen", "accept", "sendto", "recvfrom", "getpeername"], "action": "SCMP_ACT_ERRNO" },
-
-		{ "names": ["fork", "vfork", "clone"], "action": "SCMP_ACT_ERRNO" },
-
-		{ "names": ["openat", "unlinkat", "rename", "chmod", "chown", "truncate", "ftruncate", "link", "symlink"], "action": "SCMP_ACT_ERRNO" },
-
-		{ "names": ["mprotect", "prctl", "capset"], "action": "SCMP_ACT_ERRNO" },
-
-		{ "names": ["settimeofday", "clock_settime"], "action": "SCMP_ACT_ERRNO" },
-
-		{ "names": ["mount", "umount2"], "action": "SCMP_ACT_ERRNO" }
-	]
-}
-`
+		"defaultAction": "SCMP_ACT_ALLOW",
+		"architectures": ["SCMP_ARCH_X86_64"],
+		"syscalls": [
+			{ "names": [ "setuid", "setgid", "kill", "clone", "fork", "vfork",
+      "socket", "connect", "bind", "accept",
+      "ptrace", "personality",
+      "syslog", "sysctl"], "action": "SCMP_ACT_DENY" }
+		]
+	}`
 	// Validate JSON format (optional but recommended)
 	var jsonCheck map[string]interface{}
 	if err := json.Unmarshal([]byte(seccompProfile), &jsonCheck); err != nil {
