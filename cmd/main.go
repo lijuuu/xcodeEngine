@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 	"xcodeengine/executor"
 	"xcodeengine/routes"
@@ -10,7 +9,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/time/rate"
 )
 
 func setupLogFile(path string) *os.File {
@@ -23,7 +21,7 @@ func setupLogFile(path string) *os.File {
 
 func main() {
 	// Create a new RateLimiter instance
-	rateLimiter := rate.NewLimiter(1, 3)
+	// rateLimiter := rate.NewLimiter(1, 3)
 
 	// Create a new Gin router
 	router := gin.Default()
@@ -31,14 +29,14 @@ func main() {
 	//cors
 	router.Use(cors.Default())
 	// Use the RateLimiter as middleware
-	router.Use(func(c *gin.Context) {
-		if !rateLimiter.Allow() {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Rate limit exceeded ! Buy some residential proxies and try again"})
-			c.Abort()
-			return
-		}
-		c.Next() // Proceed to the next handler
-	})
+	// router.Use(func(c *gin.Context) {
+	// 	if !rateLimiter.Allow() {
+	// 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Rate limit exceeded ! Buy some residential proxies and try again"})
+	// 		c.Abort()
+	// 		return
+	// 	}
+	// 	c.Next() // Proceed to the next handler
+	// })
 
 	logFile1 := setupLogFile("logs/server.log")
 	logrus.SetOutput(logFile1)

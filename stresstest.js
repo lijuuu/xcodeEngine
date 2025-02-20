@@ -1,9 +1,10 @@
 const http = require('k6/http');
 const { check, sleep } = require('k6');
+import { b64encode } from 'k6/encoding';
 
 export let options = {
-  vus: 10,  // Number of virtual users
-  duration: '1000s',  // Test duration
+  vus: 5,  // Number of virtual users
+  duration: '100s',  // Test duration
 };
 
 //ec2-44-203-148-222.compute-1.amazonaws.com
@@ -20,7 +21,7 @@ export default function () {
   let startTime = new Date();
   let goRes = http.post('http://localhost:8000/execute', JSON.stringify({
     language: "go",
-    code: "package main; import \"fmt\"; func main() { fmt.Println(\"Hello\") }"
+    code: b64encode("package main; import \"fmt\"; func main() { fmt.Println(\"Hello\") }")
   }), { headers: { "Content-Type": "application/json" } });
   let goDuration = new Date() - startTime;
   results.go.totalTime += goDuration;
@@ -36,7 +37,7 @@ export default function () {
   startTime = new Date();
   let cppRes = http.post('http://localhost:8000/execute', JSON.stringify({
     language: "cpp",
-    code: "#include <iostream>\nint main() { std::cout << \"Hello\" << std::endl; return 0; }"
+    code: b64encode("#include <iostream>\nint main() { std::cout << \"Hello from C++\" << std::endl; return 0; }")
   }), { headers: { "Content-Type": "application/json" } });
   let cppDuration = new Date() - startTime;
   results.cpp.totalTime += cppDuration;
@@ -52,7 +53,7 @@ export default function () {
   startTime = new Date();
   let pythonRes = http.post('http://localhost:8000/execute', JSON.stringify({
     language: "python",
-    code: "print('Hello from Python')"
+    code: b64encode("print('Hello from Python')")
   }), { headers: { "Content-Type": "application/json" } });
   let pythonDuration = new Date() - startTime;
   results.python.totalTime += pythonDuration;
@@ -68,7 +69,7 @@ export default function () {
   startTime = new Date();
   let nodeRes = http.post('http://localhost:8000/execute', JSON.stringify({
     language: "js",
-    code: "console.log('Hello from Node.js')"
+    code: b64encode("console.log('Hello from Node.js')")
   }), { headers: { "Content-Type": "application/json" } });
   let nodeDuration = new Date() - startTime;
   results.js.totalTime += nodeDuration;

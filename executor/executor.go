@@ -3,6 +3,7 @@ package executor
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -14,10 +15,12 @@ import (
 
 	container "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	logrus "github.com/sirupsen/logrus"
 )
 
 const (
-	MaxWorkers = 2
+	MaxWorkers = 4
+	jobCount   = 1
 )
 
 // Language execution configurations
@@ -26,28 +29,28 @@ var configs = map[string]struct {
 	args    func(code string) []string
 }{
 	"go": {
-		timeout: 2 * time.Second,
+		timeout: 10 * time.Second,
 		args: func(code string) []string {
 			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.go && go run /app/temp/code.go`,
 				strings.ReplaceAll(code, "'", "'\\''"))}
 		},
 	},
 	"js": {
-		timeout: 2 * time.Second,
+		timeout: 10 * time.Second,
 		args: func(code string) []string {
 			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.js && node /app/temp/code.js`,
 				strings.ReplaceAll(code, "'", "'\\''"))}
 		},
 	},
 	"python": {
-		timeout: 2 * time.Second,
+		timeout: 10 * time.Second,
 		args: func(code string) []string {
 			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.py && python3 /app/temp/code.py`,
 				strings.ReplaceAll(code, "'", "'\\''"))}
 		},
 	},
 	"cpp": {
-		timeout: 2 * time.Second,
+		timeout: 10 * time.Second,
 		args: func(code string) []string {
 			return []string{"sh", "-c", fmt.Sprintf(`echo '%s' > /app/temp/code.cpp && g++ -o /app/temp/exe /app/temp/code.cpp && /app/temp/exe`,
 				strings.ReplaceAll(code, "'", "'\\''"))}
@@ -90,26 +93,32 @@ type WorkerPool struct {
 	containers   map[string]*ContainerInfo
 	mu           sync.Mutex
 	dockerClient *client.Client
-	logger       *log.Logger
+	logrus       *logrus.Logger
 }
 
 // NewWorkerPool creates a new worker pool with specified number of containers
 func NewWorkerPool() *WorkerPool {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		log.Fatalf("Failed to create Docker client: %v", err)
+		logrus.Fatalf("Failed to create Docker client: %v", err)
 	}
 
 	pool := &WorkerPool{
 		jobs:         make(chan Job, 10),
 		containers:   make(map[string]*ContainerInfo),
 		dockerClient: dockerClient,
-		logger:       log.New(log.Writer(), "[WorkerPool] ", log.LstdFlags),
+		logrus:       logrus.New(),
 	}
+
+	logFile, err := os.OpenFile("logs/container.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		logrus.Fatalf("Failed to open log file: %v", err)
+	}
+	pool.logrus.SetOutput(logFile)
 
 	// Initialize the container pool
 	if err := pool.initializeContainerPool(); err != nil {
-		log.Fatalf("Failed to initialize container pool: %v", err)
+		logrus.Fatalf("Failed to initialize container pool: %v", err)
 	}
 
 	// Start worker goroutines
@@ -128,6 +137,7 @@ func (p *WorkerPool) initializeContainerPool() error {
 	// List all containers
 	containers, err := p.dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
 	if err != nil {
+		logrus.Errorf("failed to list containers: %v", err)
 		return fmt.Errorf("failed to list containers: %v", err)
 	}
 
@@ -144,23 +154,23 @@ func (p *WorkerPool) initializeContainerPool() error {
 				ID:    c.ID,
 				State: state,
 			}
-			p.logger.Printf("Found existing worker container: %s (state: %s)", shortID(c.ID), state)
+			p.logrus.Printf("Found existing worker container: %s (state: %s)", shortID(c.ID), state)
 		}
 	}
 
 	// Handle container count
 	existingCount := len(workerContainers)
 	if existingCount > MaxWorkers {
-		p.logger.Printf("Found %d worker containers, removing excess...", existingCount)
+		p.logrus.Printf("Found %d worker containers, removing excess...", existingCount)
 		for _, cID := range workerContainers[MaxWorkers:] {
 			p.removeContainer(cID)
 		}
 	} else if existingCount < MaxWorkers {
-		p.logger.Printf("Only %d worker containers found, creating %d more...",
+		p.logrus.Printf("Only %d worker containers found, creating %d more...",
 			existingCount, MaxWorkers-existingCount)
 		for i := 0; i < MaxWorkers-existingCount; i++ {
 			if err := p.startContainer(); err != nil {
-				p.logger.Printf("Failed to start container: %v", err)
+				p.logrus.Printf("Failed to start container: %v", err)
 			}
 		}
 	}
@@ -183,7 +193,7 @@ func (p *WorkerPool) startContainer() error {
 	p.mu.Unlock()
 
 	if containerCount >= MaxWorkers {
-		p.logger.Printf("Already have %d containers, not starting new one", containerCount)
+		p.logrus.Printf("Already have %d containers, not starting new one", containerCount)
 		return nil
 	}
 
@@ -192,54 +202,60 @@ func (p *WorkerPool) startContainer() error {
 		Image: "worker",
 		Tty:   true,
 	}
-	
-	seccompProfile := `{
-		"defaultAction": "SCMP_ACT_ERRNO",
-		"architectures": ["SCMP_ARCH_X86_64"],
-		"syscalls": [
-				{ "names": ["execve", "execveat"], "action": "SCMP_ACT_ALLOW" },
-				{ "names": ["exit", "exit_group"], "action": "SCMP_ACT_ALLOW" },
-				{ "names": ["write", "read"], "action": "SCMP_ACT_ALLOW" },
-				{ "names": ["brk", "mmap", "munmap"], "action": "SCMP_ACT_ALLOW" },
-				{ "names": ["rt_sigreturn", "sigreturn"], "action": "SCMP_ACT_ALLOW" },
-				{ "names": ["futex"], "action": "SCMP_ACT_ALLOW" },
-				{ "names": [
-						"setuid", "setgid", "kill", "clone", "fork", "vfork",
-						"socket", "connect", "bind", "accept",
-						"ptrace", "personality",
-						"syslog", "sysctl"
-				], "action": "SCMP_ACT_ERRNO" }
-		]
-}`
 
-	// Save Seccomp JSON to a file
-	seccompFilePath := "/tmp/seccomp.json"
-	err := os.WriteFile(seccompFilePath, []byte(seccompProfile), 0644)
-	if err != nil {
-		fmt.Println("Failed to write seccomp profile:", err)
-		return fmt.Errorf("failed to write seccomp profile: %v", err)
+	seccompProfile := `{
+	"defaultAction": "SCMP_ACT_ERRNO",
+	"architectures": ["SCMP_ARCH_X86_64"],
+	"syscalls": [
+		{ "names": ["execve", "execveat"], "action": "SCMP_ACT_ALLOW" },
+		{ "names": ["exit", "exit_group"], "action": "SCMP_ACT_ALLOW" },
+		{ "names": ["write", "read"], "action": "SCMP_ACT_ALLOW" },
+		{ "names": ["brk", "mmap", "munmap"], "action": "SCMP_ACT_ALLOW" },
+		{ "names": ["rt_sigreturn", "sigreturn"], "action": "SCMP_ACT_ALLOW" },
+		{ "names": ["futex"], "action": "SCMP_ACT_ALLOW" },
+
+	
+		{ "names": ["socket", "connect", "bind", "listen", "accept", "sendto", "recvfrom", "getpeername"], "action": "SCMP_ACT_ERRNO" },
+
+		{ "names": ["fork", "vfork", "clone"], "action": "SCMP_ACT_ERRNO" },
+
+		{ "names": ["openat", "unlinkat", "rename", "chmod", "chown", "truncate", "ftruncate", "link", "symlink"], "action": "SCMP_ACT_ERRNO" },
+
+		{ "names": ["mprotect", "prctl", "capset"], "action": "SCMP_ACT_ERRNO" },
+
+		{ "names": ["settimeofday", "clock_settime"], "action": "SCMP_ACT_ERRNO" },
+
+		{ "names": ["mount", "umount2"], "action": "SCMP_ACT_ERRNO" }
+	]
+}
+`
+	// Validate JSON format (optional but recommended)
+	var jsonCheck map[string]interface{}
+	if err := json.Unmarshal([]byte(seccompProfile), &jsonCheck); err != nil {
+		log.Fatalf("Invalid Seccomp JSON: %v", err)
 	}
 
-	// Use the file path in HostConfig
 	hostConfig := &container.HostConfig{
 		Resources: container.Resources{
-			Memory:   500 * 1024 * 1024, // 500MB
+			Memory:   200 * 1024 * 1024, // 500MB
 			NanoCPUs: 1000000000,        // 1 CPU
 		},
-		NetworkMode: "none",                                               // Disable networking
-		SecurityOpt: []string{fmt.Sprintf("seccomp=%s", seccompFilePath)}, // Apply Seccomp
+		NetworkMode: "none",                                                     // Disable networking
+		// SecurityOpt: []string{"seccomp=" + seccompProfile, "no-new-privileges"}, // Pass JSON directly
 	}
+	start := time.Now()
 
-	// Create container
 	// Create container
 	resp, err := p.dockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, "")
 	if err != nil {
+		logrus.Errorf("failed to create container: %v", err)
 		return fmt.Errorf("failed to create container: %v", err)
 	}
 
 	// Start container
 	if err := p.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		p.dockerClient.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
+		logrus.Errorf("failed to start container: %v", err)
 		return fmt.Errorf("failed to start container: %v", err)
 	}
 
@@ -251,7 +267,7 @@ func (p *WorkerPool) startContainer() error {
 	}
 	p.mu.Unlock()
 
-	p.logger.Printf("Started new worker container: %s", shortID(resp.ID))
+	p.logrus.Printf("Started new worker container: %s within time %v", shortID(resp.ID), time.Since(start))
 	return nil
 }
 
@@ -261,9 +277,9 @@ func (p *WorkerPool) removeContainer(containerID string) {
 
 	// Try to remove the container
 	if err := p.dockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
-		p.logger.Printf("Failed to remove container %s: %v", shortID(containerID), err)
+		p.logrus.Printf("Failed to remove container %s: %v", shortID(containerID), err)
 	} else {
-		p.logger.Printf("Removed container: %s", shortID(containerID))
+		p.logrus.Printf("Removed container: %s", shortID(containerID))
 	}
 
 	// Remove from our tracking
@@ -274,7 +290,7 @@ func (p *WorkerPool) removeContainer(containerID string) {
 
 // monitorContainers checks container health periodically
 func (p *WorkerPool) monitorContainers() {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -289,7 +305,7 @@ func (p *WorkerPool) checkContainerHealth() {
 	// Get all containers from Docker
 	containers, err := p.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
-		p.logger.Printf("Failed to list containers: %v", err)
+		p.logrus.Printf("Failed to list containers: %v", err)
 		return
 	}
 
@@ -308,7 +324,7 @@ func (p *WorkerPool) checkContainerHealth() {
 	for id, _ := range p.containers {
 		if !runningWorkers[id] {
 			// Container is not running according to Docker
-			p.logger.Printf("Container %s not running, marking for removal", shortID(id))
+			p.logrus.Printf("Container %s not running, marking for removal", shortID(id))
 			containersToRemove = append(containersToRemove, id)
 		}
 	}
@@ -324,15 +340,19 @@ func (p *WorkerPool) checkContainerHealth() {
 
 	// Start new containers if needed
 	if currentCount < MaxWorkers {
-		p.logger.Printf("Container count (%d) below target (%d), starting new containers",
+		p.logrus.Printf("Container count (%d) below target (%d), starting new containers",
 			currentCount, MaxWorkers)
 		for i := 0; i < MaxWorkers-currentCount; i++ {
+			start := time.Now()
+			fmt.Println("Starting new container")
 			if err := p.startContainer(); err != nil {
-				p.logger.Printf("Failed to start replacement container: %v", err)
+				p.logrus.Printf("Failed to start replacement container: %v", err)
 			}
+			duration := time.Since(start)
+			fmt.Println("Container started in ", duration)
 		}
 	} else if len(runningWorkers) > MaxWorkers {
-		p.logger.Printf("Too many running worker containers (%d), target is %d",
+		p.logrus.Printf("Too many running worker containers (%d), target is %d",
 			len(runningWorkers), MaxWorkers)
 
 		// Identify excess containers to remove
@@ -355,19 +375,19 @@ func (p *WorkerPool) checkContainerHealth() {
 
 // worker processes jobs from the queue
 func (p *WorkerPool) worker(id int) {
-	p.logger.Printf("Worker %d started", id)
+	p.logrus.Printf("Worker %d started", id)
 
 	for job := range p.jobs {
 		// Get an available container
 		containerID, err := p.getAvailableContainer()
 		if err != nil {
-			p.logger.Printf("Worker %d couldn't get container: %v", id, err)
+			p.logrus.Printf("Worker %d couldn't get container: %v", id, err)
 			job.Result <- Result{Error: err}
 			continue
 		}
 
 		// Execute the job
-		p.logger.Printf("Worker %d executing in container %s", id, shortID(containerID))
+		p.logrus.Printf("Worker %d executing in container %s", id, shortID(containerID))
 		p.setContainerState(containerID, StateBusy)
 
 		start := time.Now()
@@ -384,14 +404,17 @@ func (p *WorkerPool) getAvailableContainer() (string, error) {
 	retryDelay := 200 * time.Millisecond
 
 	for i := 0; i < maxRetries; i++ {
+		fmt.Println("Getting available container", p.containers)
 		// Try to find an idle container
 		p.mu.Lock()
 		for id, info := range p.containers {
+			fmt.Println("Container state:", info.State)
 			if info.State == StateIdle {
 				p.mu.Unlock()
 				return id, nil
 			}
 		}
+		fmt.Println("No idle container found ", p.containers)
 		p.mu.Unlock()
 
 		// No idle container found, wait before retrying
@@ -421,36 +444,56 @@ func (p *WorkerPool) executeCode(containerID, language, code string) (string, er
 	ctx, cancel := context.WithTimeout(context.Background(), config.timeout)
 	defer cancel()
 
-	args := append([]string{"exec", containerID}, config.args(code)...)
-	cmd := exec.CommandContext(ctx, "docker", args...)
-
 	var output bytes.Buffer
+	cmd := exec.CommandContext(ctx, "docker", append([]string{"exec", containerID}, config.args(code)...)...)
 	cmd.Stdout = &output
 	cmd.Stderr = &output
 
+	start := time.Now()
 	err := cmd.Run()
+	duration := time.Since(start)
 
 	if ctx.Err() == context.DeadlineExceeded {
-		return "", fmt.Errorf("execution timed out after %v", config.timeout)
+		p.logrus.WithFields(logrus.Fields{
+			"container": shortID(containerID),
+			"language":  language,
+			"duration":  duration,
+		}).Warn("Execution timeout after " + duration.String() + "removing and creating new container")
+
+		p.removeContainer(containerID)
+		p.startContainer()
+		return "", fmt.Errorf("timeout after %v", config.timeout)
 	}
 
 	if err != nil {
+		p.logrus.WithFields(logrus.Fields{
+			"container": shortID(containerID),
+			"language":  language,
+			"duration":  duration,
+			"error":     err,
+		}).Error("Execution failed")
 		return output.String(), fmt.Errorf("execution error: %w", err)
 	}
+
+	p.logrus.WithFields(logrus.Fields{
+		"container": shortID(containerID),
+		"language":  language,
+		"duration":  duration,
+	}).Debug("Execution completed")
 
 	return output.String(), nil
 }
 
 // ExecuteJob submits a job to the worker pool
 func (p *WorkerPool) ExecuteJob(language, code string) Result {
-	result := make(chan Result, 1)
+	result := make(chan Result, jobCount)
 	p.jobs <- Job{Language: language, Code: code, Result: result}
 	return <-result
 }
 
 // Shutdown stops the worker pool
 func (p *WorkerPool) Shutdown() {
-	p.logger.Println("Shutting down worker pool...")
+	p.logrus.Println("Shutting down worker pool...")
 	close(p.jobs)
 
 	// Clean up containers

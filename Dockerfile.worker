@@ -20,18 +20,6 @@ RUN echo "none /sys/class/net /proc/sys/net/ipv4 /proc/sys/net/ipv6 /proc/sysrq-
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Block dangerous syscalls using Seccomp
-COPY seccomp.json /seccomp.json
-
-# Add memory and CPU constraints
-LABEL com.docker.container.memory="512m"
-LABEL com.docker.container.cpu="1.0"
-
-# Add security-related metadata
-LABEL security.capabilities="drop=all,add=execve"
-LABEL security.seccomp="file://seccomp.json"
-LABEL security.apparmor="unconfined"
-
 # Create the temp directory with appropriate permissions
 RUN mkdir -p /app/temp && chmod 777 /app/temp
 

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -15,120 +16,229 @@ func (e *SanitizationError) Error() string {
 	return e.Message + ": " + e.Details
 }
 
-type CodeSanitizer struct {
-	maxCodeLength int
-}
-
-func NewCodeSanitizer(maxCodeLength int) *CodeSanitizer {
-	return &CodeSanitizer{maxCodeLength: maxCodeLength}
-}
-
-func (s *CodeSanitizer) SanitizeCode(code, language string) error {
-	if len(code) > s.maxCodeLength {
+func SanitizeCode(code, language string, maxCodeLength int) error {
+	if len(code) > maxCodeLength {
 		return &SanitizationError{
 			Message: "Code length exceeds maximum limit",
-			Details: "Max length allowed is " + string(rune(s.maxCodeLength)),
+			Details: fmt.Sprintf("Max length allowed is %d", maxCodeLength),
 		}
 	}
 
-	systemPatterns := []string{
-		`(?i)(subprocess|exec\.|shell|eval|child_process)`,
-		`(?i)(io/ioutil|os\.Open|os\.Create|os\.Remove)`,
-		`(?i)(net\.Listen|net\.Dial|http\.|urllib|axios)`,
+	// Check for obvious dangerous operations regardless of language
+	dangerousPatterns := []string{
+		`(?i)(os\.Remove|os\.RemoveAll)`,
+		`(?i)(net\.Listen|net\.Dial)`,
+		`(?i)(exec\.Command)`,
+		`(?i)(syscall\.Exec)`,
 	}
-	if matched, err := matchPatterns(systemPatterns, code); err != nil || matched {
+
+	if matched, err := matchPatterns(dangerousPatterns, code); err != nil || matched {
 		return &SanitizationError{
-			Message: "Prohibited system-level access detected",
-			Details: "Code contains restricted system operations",
+			Message: "Prohibited dangerous operation detected",
+			Details: "Code contains potentially harmful system operations",
 		}
 	}
 
-	var restrictedPatterns []string
 	switch language {
 	case "python":
-		if strings.Contains(code, "import") || strings.Contains(code, "from") {
-			restrictedPatterns = []string{
-				`^import\s+(?!math|random|datetime|json|re|string|collections|itertools|functools|typing).*$`,
-				`^from\s+(?!math|random|datetime|json|re|string|collections|itertools|functools|typing)\s+import.*$`,
-			}
-		}
-		restrictedPatterns = append(restrictedPatterns, []string{
-			`__import__`, `globals|locals|vars`, `getattr|setattr|delattr`,
-			`pip|setuptools|pkg_resources`,
-		}...)
+		return sanitizePython(code)
 	case "go":
-		safePackages := []string{
-			"fmt",
-			"strings",
-			"strconv",
-			"math",
-			"time",
-			"encoding/json",
-			"errors",
-			"sort",
-			"regexp",
-		}
-
-		if strings.Contains(code, "import") {
-			lines := strings.Split(code, "\n")
-			for _, line := range lines {
-				line = strings.TrimSpace(line)
-				if strings.HasPrefix(line, "import") {
-					importMatch := regexp.MustCompile(`^import\s+"([^"]+)"`).FindStringSubmatch(line)
-					if importMatch != nil {
-						pkg := importMatch[1]
-						isSafe := false
-						for _, safePkg := range safePackages {
-							if pkg == safePkg {
-								isSafe = true
-								break
-							}
-						}
-						if !isSafe {
-							return &SanitizationError{
-								Message: "Prohibited go code pattern detected",
-								Details: "Unauthorized import: " + pkg,
-							}
-						}
-					}
-				}
-			}
-		}
-
-		restrictedPatterns = []string{
-			`unsafe\.`,
-			`reflect\.`,
-			`plugin\.`,
-			`go/ast`,
-			`syscall\.`,
-			`debug\.`,
-			`runtime\.`,
-			`os\.Exit`,
-			`panic\(`,
-		}
+		return sanitizeGo(code)
 	case "js":
-		if strings.Contains(code, "require") || strings.Contains(code, "import") {
-			restrictedPatterns = []string{
-				`require\(.*\)`, `import\s+.*\s+from`, `import\s*{.*}`,
-			}
-		}
-		restrictedPatterns = append(restrictedPatterns, []string{
-			`process`, `global`, `Buffer`,
-			`__proto__`, `prototype`,
-			`fs`, `child_process`,
-			`eval`, `Function`,
-			`process\.env`,
-		}...)
+		return sanitizeJS(code)
+	case "cpp":
+		return sanitizeCPP(code)
 	default:
 		return errors.New("unsupported language: " + language)
 	}
+}
 
-	if len(restrictedPatterns) > 0 {
-		if matched, err := matchPatterns(restrictedPatterns, code); err != nil || matched {
-			return &SanitizationError{
-				Message: "Prohibited " + language + " code pattern detected",
-				Details: "Unauthorized module or operation",
+func sanitizePython(code string) error {
+	// Blacklist clearly dangerous modules
+	dangerousModules := []string{
+		`import\s+os\s*$`,
+		`from\s+os\s+import\s+(system|popen|execl|execle|execlp|execv|execve|execvp|execvpe|spawn)`,
+		`import\s+subprocess`,
+		`import\s+shutil`,
+		`import\s+ctypes`,
+		`import\s+sys`,
+		`__import__\(['"]os['"]`,
+	}
+
+	if matched, err := matchPatterns(dangerousModules, code); err != nil || matched {
+		return &SanitizationError{
+			Message: "Prohibited Python module detected",
+			Details: "Code attempts to import restricted system modules",
+		}
+	}
+
+	// Look for potentially dangerous operations
+	dangerousOps := []string{
+		`open\(.+,\s*['"]w['"]`, // Writing to files
+		`__import__\(`,
+		`eval\(`,
+		`exec\(`,
+		`globals\(\)\.`,
+		`locals\(\)\.`,
+	}
+
+	if matched, err := matchPatterns(dangerousOps, code); err != nil || matched {
+		return &SanitizationError{
+			Message: "Prohibited Python operation detected",
+			Details: "Code attempts to perform potentially unsafe operations",
+		}
+	}
+
+	return nil
+}
+
+func sanitizeGo(code string) error {
+	// Define packages that require special scrutiny
+	restrictedPackages := map[string]bool{
+		"os":        true,
+		"syscall":   true,
+		"unsafe":    true,
+		"net":       true,
+		"net/http":  true,
+		"io/ioutil": true,
+		"plugin":    true,
+		"runtime":   true,
+	}
+
+	// Check imports
+	importRegex := regexp.MustCompile(`import\s+(?:[\w\d_]+\s+)?"([^"]+)"`)
+	matches := importRegex.FindAllStringSubmatch(code, -1)
+
+	for _, match := range matches {
+		if len(match) > 1 {
+			pkg := match[1]
+			pkgBase := strings.Split(pkg, "/")[0]
+
+			if restrictedPackages[pkg] || restrictedPackages[pkgBase] {
+				// Allow specific safe functions from restricted packages
+				if pkg == "os" && !containsOSDangerousFunctions(code) {
+					// We're explicitly allowing certain os functions
+					continue
+				}
+
+				return &SanitizationError{
+					Message: "Prohibited Go package detected",
+					Details: "Package not allowed: " + pkg,
+				}
 			}
+		}
+	}
+
+	// Check for goroutine overuse
+	goroutineCount := len(regexp.MustCompile(`go\s+func`).FindAllString(code, -1))
+	if goroutineCount > 5 {
+		return &SanitizationError{
+			Message: "Excessive goroutine usage",
+			Details: fmt.Sprintf("Found %d goroutines, maximum allowed is 5", goroutineCount),
+		}
+	}
+
+	// Check for infinite loops
+	infiniteLoopPatterns := []string{
+		`for\s*{`,
+		`for\s+true\s*{`,
+		`for\s+;\s*;\s*{`,
+	}
+
+	// Only check for these if there's no indication of a break statement
+	if !strings.Contains(code, "break") {
+		if matched, err := matchPatterns(infiniteLoopPatterns, code); err != nil || matched {
+			return &SanitizationError{
+				Message: "Potential infinite loop detected",
+				Details: "Make sure loops have proper exit conditions",
+			}
+		}
+	}
+
+	return nil
+}
+
+// Helper function to check if code uses dangerous OS functions
+func containsOSDangerousFunctions(code string) bool {
+	dangerousFuncs := []string{
+		`os\.Remove`, `os\.RemoveAll`,
+		`os\.Chdir`, `os\.Chmod`,
+		`os\.Chown`, `os\.Exit`,
+		`os\.Link`, `os\.MkdirAll`,
+		`os\.Rename`, `os\.Symlink`,
+	}
+
+	for _, pattern := range dangerousFuncs {
+		if matched, _ := regexp.MatchString(pattern, code); matched {
+			return true
+		}
+	}
+
+	// Allow these OS functions (they're generally safe)
+	// os.Getenv, os.Environ, os.Hostname, os.UserHomeDir, etc.
+
+	return false
+}
+
+func sanitizeJS(code string) error {
+	// Blacklist dangerous imports/requires
+	dangerousModules := []string{
+		`require\(['"]fs['"]`,
+		`require\(['"]child_process['"]`,
+		`require\(['"]http['"]`,
+		`require\(['"]https['"]`,
+		`require\(['"]os['"]`,
+		`import\s+.*\s+from\s+['"]fs['"]`,
+		`import\s+.*\s+from\s+['"]child_process['"]`,
+	}
+
+	if matched, err := matchPatterns(dangerousModules, code); err != nil || matched {
+		return &SanitizationError{
+			Message: "Prohibited JS module detected",
+			Details: "Code attempts to import restricted system modules",
+		}
+	}
+
+	// Check for dangerous operations
+	dangerousOps := []string{
+		`process\.exit`,
+		`eval\(`,
+		`Function\(.*\)`,
+		`new Function`,
+		`window\.`,
+		`document\.`,
+		`localStorage`,
+		`sessionStorage`,
+		`indexedDB`,
+		`WebSocket`,
+	}
+
+	if matched, err := matchPatterns(dangerousOps, code); err != nil || matched {
+		return &SanitizationError{
+			Message: "Prohibited JS operation detected",
+			Details: "Code attempts to perform potentially unsafe operations",
+		}
+	}
+
+	return nil
+}
+
+func sanitizeCPP(code string) error {
+	// Blacklist potentially dangerous operations or imports
+	dangerousPatterns := []string{
+		`system\(`,        // Disallow system calls
+		`exec\(`,          // Disallow exec calls
+		`fork\(`,          // Disallow forking processes
+		`popen\(`,         // Disallow opening processes
+		`delete\s+.*\s+;`, // Disallow dynamic memory deletion
+		`new\s+.*\s*;`,    // Disallow dynamic memory allocation
+		`std::system`,     // Disallow system calls in std namespace
+	}
+
+	if matched, err := matchPatterns(dangerousPatterns, code); err != nil || matched {
+		return &SanitizationError{
+			Message: "Prohibited C++ operation detected",
+			Details: "Code attempts to perform potentially unsafe operations",
 		}
 	}
 

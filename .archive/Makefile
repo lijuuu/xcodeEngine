@@ -1,16 +1,11 @@
-.PHONY: all init-repo install-docker build-docker build-go setup-service setup-nginx
+.PHONY: all init-system build-project setup-service setup-nginx
 
-all: init-repo install-docker build-docker build-go setup-service setup-nginx
+all:init-system build-project setup-service setup-nginx
 
-init-repo:
-	@sudo apt-get install -y git golang-go
-	@git clone https://github.com/lijuuu/xcodeEngine.git
-	@cd xcodeEngine
-
-# Install Docker
-install-docker:
-	@echo "Installing Docker..."
+init-system:
 	@sudo apt-get update
+	@sudo apt-get install -y git golang-go
+	@echo "Installing Docker..."
 	@sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 	@curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 	@sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(shell lsb_release -cs) stable"
@@ -20,15 +15,14 @@ install-docker:
 	@sudo systemctl enable docker
 
 # Build Docker image
-build-docker:
-	@echo "Building Docker image..."
+build-project:
+	@echo "Cloning project..."
+	@git clone https://github.com/lijuuu/xcodeEngine.git
+	@cd xcodeEngine; echo "Building Go code in xcodeEngine folder..."; \
+		GO111MODULE=on go mod tidy; \
+		GO111MODULE=on go build -o worker cmd/main.go; 
+	@echo "Building Docker image in xcodeEngine folder..."
 	@sudo docker build -t worker -f Dockerfile.worker .
-
-# Build Go code
-build-go:
-	@echo "Building Go code..."
-	@go mod tidy
-	@go build -o worker cmd/main.go
 
 # Setup systemd service
 setup-service:

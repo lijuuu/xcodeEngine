@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 	"xcodeengine/executor"
+	"xcodeengine/internal"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -63,6 +64,15 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 		c.JSON(400, ExecutionResponse{
 			Error:         ErrCodeTooLong.Error(),
 			StatusMessage: "Code Too Long",
+		})
+		return
+	}
+
+	// Sanitize code
+	if err := internal.SanitizeCode(code, req.Language, s.maxCodeLen); err != nil {
+		c.JSON(400, ExecutionResponse{
+			Error:         err.Error(),
+			StatusMessage: "Code failed to pass sanitization",
 		})
 		return
 	}
