@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	MaxWorkers = 2
+	MaxWorkers = 4
 	jobCount   = 1
 )
 
