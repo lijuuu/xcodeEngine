@@ -3,7 +3,7 @@
 all: init-repo install-docker build-docker build-go setup-service setup-nginx
 
 init-repo:
-	@sudo apt-get install -y git go
+	@sudo apt-get install -y git golang-go
 	@git clone https://github.com/lijuuu/xcodeEngine.git
 	@cd xcodeEngine
 
@@ -28,7 +28,7 @@ build-docker:
 build-go:
 	@echo "Building Go code..."
 	@go mod tidy
-	@go build -o worker main.go
+	@go build -o worker cmd/main.go
 
 # Setup systemd service
 setup-service:
@@ -43,7 +43,7 @@ setup-service:
 setup-nginx:
 	@echo "Setting up Nginx..."
 	@sudo apt-get install -y nginx
-	@sudo cp worker /etc/nginx/sites-available/worker
+	@sudo cp nginx.conf /etc/nginx/sites-available/worker
 	@sudo ln -sf /etc/nginx/sites-available/worker /etc/nginx/sites-enabled/
 	@sudo rm -f /etc/nginx/sites-enabled/default
 	@sudo nginx -t

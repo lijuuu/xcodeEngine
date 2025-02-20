@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -191,14 +192,45 @@ func (p *WorkerPool) startContainer() error {
 		Image: "worker",
 		Tty:   true,
 	}
+	
+	seccompProfile := `{
+		"defaultAction": "SCMP_ACT_ERRNO",
+		"architectures": ["SCMP_ARCH_X86_64"],
+		"syscalls": [
+				{ "names": ["execve", "execveat"], "action": "SCMP_ACT_ALLOW" },
+				{ "names": ["exit", "exit_group"], "action": "SCMP_ACT_ALLOW" },
+				{ "names": ["write", "read"], "action": "SCMP_ACT_ALLOW" },
+				{ "names": ["brk", "mmap", "munmap"], "action": "SCMP_ACT_ALLOW" },
+				{ "names": ["rt_sigreturn", "sigreturn"], "action": "SCMP_ACT_ALLOW" },
+				{ "names": ["futex"], "action": "SCMP_ACT_ALLOW" },
+				{ "names": [
+						"setuid", "setgid", "kill", "clone", "fork", "vfork",
+						"socket", "connect", "bind", "accept",
+						"ptrace", "personality",
+						"syslog", "sysctl"
+				], "action": "SCMP_ACT_ERRNO" }
+		]
+}`
+
+	// Save Seccomp JSON to a file
+	seccompFilePath := "/tmp/seccomp.json"
+	err := os.WriteFile(seccompFilePath, []byte(seccompProfile), 0644)
+	if err != nil {
+		fmt.Println("Failed to write seccomp profile:", err)
+		return fmt.Errorf("failed to write seccomp profile: %v", err)
+	}
+
+	// Use the file path in HostConfig
 	hostConfig := &container.HostConfig{
 		Resources: container.Resources{
 			Memory:   500 * 1024 * 1024, // 500MB
 			NanoCPUs: 1000000000,        // 1 CPU
 		},
-		NetworkMode: "none", // Disable networking
+		NetworkMode: "none",                                               // Disable networking
+		SecurityOpt: []string{fmt.Sprintf("seccomp=%s", seccompFilePath)}, // Apply Seccomp
 	}
 
+	// Create container
 	// Create container
 	resp, err := p.dockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, "")
 	if err != nil {
