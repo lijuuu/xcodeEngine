@@ -27,6 +27,7 @@ cd xcodeEngine || exit
 echo "Building Go code in xcodeEngine folder..."
 GO111MODULE=on go mod tidy
 GO111MODULE=on go build -o worker cmd/main.go
+sudo chmod 666 logs/*
 
 # Build Docker image
 echo "Building Docker image in xcodeEngine folder..."

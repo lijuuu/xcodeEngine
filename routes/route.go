@@ -26,6 +26,7 @@ type ExecutionResponse struct {
 	Output        string `json:"output"`
 	Error         string `json:"error,omitempty"`
 	StatusMessage string `json:"status_message"`
+	Success       bool   `json:"success"`
 	ExecutionTime string `json:"execution_time,omitempty"`
 }
 
@@ -45,6 +46,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 		c.JSON(400, ExecutionResponse{
 			Error:         err.Error(),
 			StatusMessage: "Invalid Request Format",
+			Success:       false,
 		})
 		return
 	}
@@ -52,7 +54,11 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	start := time.Now()
 	codeBytes, err := base64.StdEncoding.DecodeString(req.Code)
 	if err != nil {
-		c.JSON(400, "Failed to decode Base64")
+		c.JSON(400, ExecutionResponse{
+			Error:         err.Error(),
+			StatusMessage: "Failed to decode Base64",
+			Success:       false,
+		})
 		return
 	}
 
@@ -64,6 +70,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 		c.JSON(400, ExecutionResponse{
 			Error:         ErrCodeTooLong.Error(),
 			StatusMessage: "Code Too Long",
+			Success:       false,
 		})
 		return
 	}
@@ -73,6 +80,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 		c.JSON(400, ExecutionResponse{
 			Error:         err.Error(),
 			StatusMessage: "Code failed to pass sanitization",
+			Success:       false,
 		})
 		return
 	}
@@ -85,6 +93,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 			Error:         output.Error.Error(),
 			StatusMessage: "Runtime Error",
 			Output:        output.Output,
+			Success:       false,
 		})
 		return
 	}
@@ -92,6 +101,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	c.JSON(200, ExecutionResponse{
 		Output:        output.Output,
 		StatusMessage: "Success",
+		Success:       true,
 		ExecutionTime: output.ExecutionTime.String(),
 	})
 }
