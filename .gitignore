@@ -1,5 +1,3 @@
 /archive/
 .env
-server.log
-container.log
 /vscode/

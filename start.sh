@@ -55,6 +55,6 @@ sudo apt-get install -y certbot python3-certbot-nginx
 
 # Obtain SSL certificate for xengine.lijuu.me
 echo "Obtaining SSL certificate for xengine.lijuu.me..."
-sudo certbot --nginx -d xengine.lijuu.me --non-interactive --agree-tos -m liju@lijuuu.me
+sudo certbot --nginx -d xengine.lijuu.me --non-interactive --agree-tos -m liju@lijuu.me
 
 echo "Setup complete!"
