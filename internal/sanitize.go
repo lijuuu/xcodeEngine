@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strings"
 )
 
+// SanitizationError represents an error during code sanitization
 type SanitizationError struct {
 	Message string
 	Details string
@@ -16,6 +16,20 @@ func (e *SanitizationError) Error() string {
 	return e.Message + ": " + e.Details
 }
 
+// PatternCategory represents a category of dangerous patterns
+type PatternCategory struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Patterns    []string `json:"patterns"`
+}
+
+// LanguagePatterns holds all dangerous patterns for a specific language
+type LanguagePatterns struct {
+	Common   []PatternCategory            `json:"common"`   // Common dangerous patterns
+	Language map[string][]PatternCategory `json:"language"` // Language-specific patterns
+}
+
+// Simplified pattern matching functions
 func SanitizeCode(code, language string, maxCodeLength int) error {
 	if len(code) > maxCodeLength {
 		return &SanitizationError{
@@ -24,140 +38,27 @@ func SanitizeCode(code, language string, maxCodeLength int) error {
 		}
 	}
 
-	// Check for obvious dangerous operations regardless of language
-	dangerousPatterns := []string{
-		`(?i)(os\.Remove|os\.RemoveAll)`,
-		`(?i)(net\.Listen|net\.Dial)`,
-		`(?i)(exec\.Command)`,
-		`(?i)(syscall\.Exec)`,
-	}
-
-	if matched, err := matchPatterns(dangerousPatterns, code); err != nil || matched {
-		return &SanitizationError{
-			Message: "Prohibited dangerous operation detected",
-			Details: "Code contains potentially harmful system operations",
+	// Check common patterns first
+	for _, category := range DangerousPatterns.Common {
+		if matched := hasMatchingPattern(category.Patterns, code); matched {
+			return &SanitizationError{
+				Message: fmt.Sprintf("Prohibited operation detected: %s", category.Name),
+				Details: category.Description,
+			}
 		}
 	}
 
-	switch language {
-	case "python":
-		return sanitizePython(code)
-	case "go":
-		return sanitizeGo(code)
-	case "js":
-		return sanitizeJS(code)
-	case "cpp":
-		return sanitizeCPP(code)
-	default:
+	// Check language-specific patterns
+	langPatterns, ok := DangerousPatterns.Language[language]
+	if !ok {
 		return errors.New("unsupported language: " + language)
 	}
-}
 
-func sanitizePython(code string) error {
-	// Blacklist clearly dangerous modules
-	dangerousModules := []string{
-		`import\s+os\s*$`,
-		`from\s+os\s+import\s+(system|popen|execl|execle|execlp|execv|execve|execvp|execvpe|spawn)`,
-		`import\s+subprocess`,
-		`import\s+shutil`,
-		`import\s+ctypes`,
-		`import\s+sys`,
-		`__import__\(['"]os['"]`,
-	}
-
-	if matched, err := matchPatterns(dangerousModules, code); err != nil || matched {
-		return &SanitizationError{
-			Message: "Prohibited Python module detected",
-			Details: "Code attempts to import restricted system modules",
-		}
-	}
-
-	// Look for potentially dangerous operations
-	dangerousOps := []string{
-		`open\(.+,\s*['"]w['"]`, // Writing to files
-		`__import__\(`,
-		`eval\(`,
-		`exec\(`,
-		`globals\(\)\.`,
-		`locals\(\)\.`,
-		`os\.system\(`,                     // Disallow executing arbitrary commands
-		`os\.exec\(`,                       // Disallow executing arbitrary commands
-		`subprocess\.Popen\(`,              // Disallow subprocess calls
-		`os\.fork\(`,                       // Disallow forking processes
-		`threading\.Thread\s*\(.*bomb\(\)`, // Disallow recursive thread creation
-		`for\s*\(.*\s*os\.fork\(\)`,        // Disallow forking in loops
-		`while\s*True\s*:\s*os\.fork\(\)`,  // Disallow infinite forking
-	}
-
-	if matched, err := matchPatterns(dangerousOps, code); err != nil || matched {
-		return &SanitizationError{
-			Message: "Prohibited Python operation detected",
-			Details: "Code attempts to perform potentially unsafe operations",
-		}
-	}
-
-	return nil
-}
-
-func sanitizeGo(code string) error {
-	// Define packages that require special scrutiny
-	restrictedPackages := map[string]bool{
-		"os":        true,
-		"syscall":   true,
-		"unsafe":    true,
-		"net":       true,
-		"net/http":  true,
-		"io/ioutil": true,
-		"plugin":    true,
-		"runtime":   true,
-	}
-
-	// Check imports
-	importRegex := regexp.MustCompile(`import\s+(?:[\w\d_]+\s+)?"([^"]+)"`)
-	matches := importRegex.FindAllStringSubmatch(code, -1)
-
-	for _, match := range matches {
-		if len(match) > 1 {
-			pkg := match[1]
-			pkgBase := strings.Split(pkg, "/")[0]
-
-			if restrictedPackages[pkg] || restrictedPackages[pkgBase] {
-				// Allow specific safe functions from restricted packages
-				if pkg == "os" && !containsOSDangerousFunctions(code) {
-					// We're explicitly allowing certain os functions
-					continue
-				}
-
-				return &SanitizationError{
-					Message: "Prohibited Go package detected",
-					Details: "Package not allowed: " + pkg,
-				}
-			}
-		}
-	}
-
-	// Check for goroutine overuse
-	goroutineCount := len(regexp.MustCompile(`go\s+func`).FindAllString(code, -1))
-	if goroutineCount > 5 {
-		return &SanitizationError{
-			Message: "Excessive goroutine usage",
-			Details: fmt.Sprintf("Found %d goroutines, maximum allowed is 5", goroutineCount),
-		}
-	}
-
-	// Check for infinite loops
-	infiniteLoopPatterns := []string{
-		`for\s*{`,
-		`for\s+true\s*{`,
-		`for\s+;\s*;\s*{`,
-	}
-
-	// Only check for these if there's no indication of a break statement
-	if !strings.Contains(code, "break") {
-		if matched, err := matchPatterns(infiniteLoopPatterns, code); err != nil || matched {
+	for _, category := range langPatterns {
+		if matched := hasMatchingPattern(category.Patterns, code); matched {
 			return &SanitizationError{
-				Message: "Potential infinite loop detected",
-				Details: "Make sure loops have proper exit conditions",
+				Message: fmt.Sprintf("Prohibited %s operation detected: %s", language, category.Name),
+				Details: category.Description,
 			}
 		}
 	}
@@ -165,102 +66,220 @@ func sanitizeGo(code string) error {
 	return nil
 }
 
-// Helper function to check if code uses dangerous OS functions
-func containsOSDangerousFunctions(code string) bool {
-	dangerousFuncs := []string{
-		`os\.Remove`, `os\.RemoveAll`,
-		`os\.Chdir`, `os\.Chmod`,
-		`os\.Chown`, `os\.Exit`,
-		`os\.Link`, `os\.MkdirAll`,
-		`os\.Rename`, `os\.Symlink`,
-	}
 
-	for _, pattern := range dangerousFuncs {
-		if matched, _ := regexp.MatchString(pattern, code); matched {
+// Simplified pattern matching function
+func hasMatchingPattern(patterns []string, code string) bool {
+	for _, pattern := range patterns {
+		if matched, err := regexp.MatchString(pattern, code); err == nil && matched {
 			return true
 		}
 	}
-
-	// Allow these OS functions (they're generally safe)
-	// os.Getenv, os.Environ, os.Hostname, os.UserHomeDir, etc.
-
 	return false
 }
 
-func sanitizeJS(code string) error {
-	// Blacklist dangerous imports/requires
-	dangerousModules := []string{
-		`require\(['"]fs['"]`,
-		`require\(['"]child_process['"]`,
-		`require\(['"]http['"]`,
-		`require\(['"]https['"]`,
-		`require\(['"]os['"]`,
-		`import\s+.*\s+from\s+['"]fs['"]`,
-		`import\s+.*\s+from\s+['"]child_process['"]`,
-	}
-
-	if matched, err := matchPatterns(dangerousModules, code); err != nil || matched {
-		return &SanitizationError{
-			Message: "Prohibited JS module detected",
-			Details: "Code attempts to import restricted system modules",
-		}
-	}
-
-	// Check for dangerous operations
-	dangerousOps := []string{
-		`process\.exit`,
-		`eval\(`,
-		`Function\(.*\)`,
-		`new Function`,
-		`window\.`,
-		`document\.`,
-		`localStorage`,
-		`sessionStorage`,
-		`indexedDB`,
-		`WebSocket`,
-	}
-
-	if matched, err := matchPatterns(dangerousOps, code); err != nil || matched {
-		return &SanitizationError{
-			Message: "Prohibited JS operation detected",
-			Details: "Code attempts to perform potentially unsafe operations",
-		}
-	}
-
-	return nil
-}
-
-func sanitizeCPP(code string) error {
-	// Blacklist potentially dangerous operations or imports
-	dangerousPatterns := []string{
-		`system\(`,        // Disallow system calls
-		`exec\(`,          // Disallow exec calls
-		`fork\(`,          // Disallow forking processes
-		`popen\(`,         // Disallow opening processes
-		`delete\s+.*\s+;`, // Disallow dynamic memory deletion
-		`new\s+.*\s*;`,    // Disallow dynamic memory allocation
-		`std::system`,     // Disallow system calls in std namespace
-	}
-
-	if matched, err := matchPatterns(dangerousPatterns, code); err != nil || matched {
-		return &SanitizationError{
-			Message: "Prohibited C++ operation detected",
-			Details: "Code attempts to perform potentially unsafe operations",
-		}
-	}
-
-	return nil
-}
-
-func matchPatterns(patterns []string, code string) (bool, error) {
-	for _, pattern := range patterns {
-		matched, err := regexp.MatchString(pattern, code)
-		if err != nil {
-			return false, err
-		}
-		if matched {
-			return true, nil
-		}
-	}
-	return false, nil
+// DangerousPatterns contains all the patterns as a struct constant
+var DangerousPatterns = LanguagePatterns{
+	Common: []PatternCategory{
+		{
+			Name:        "systemOperations",
+			Description: "Dangerous system operations",
+			Patterns: []string{
+				"(?i)(os\\.Remove|os\\.RemoveAll)",
+				"(?i)(net\\.Listen|net\\.Dial)",
+				"(?i)(exec\\.Command)",
+				"(?i)(syscall\\.Exec)",
+			},
+		},
+		{
+			Name:        "codeExecution",
+			Description: "Dynamic code execution",
+			Patterns: []string{
+				"eval\\(",
+				"exec\\(",
+			},
+		},
+		{
+			Name:        "resourceDepletion",
+			Description: "Resource depletion attacks",
+			Patterns: []string{
+				"(?i)while\\s*\\(\\s*true\\s*\\)",
+				"(?i)while\\s*\\(\\s*1\\s*\\)",
+				"(?i)for\\s*\\(\\s*;;\\s*\\)",
+				"(?i)for\\s*\\(;\\s*true\\s*;\\)",
+				"(?i)\\.repeat\\s*\\(\\s*Infinity\\s*\\)",
+				"\\[\\s*\\.\\.\\.Array\\s*\\(\\s*1e\\d+\\s*\\)\\s*\\]",
+				"Array\\s*\\(\\s*1e\\d+\\s*\\)",
+				"BigInt\\s*\\(\\s*Number\\.MAX_SAFE_INTEGER\\s*\\)\\s*\\*\\s*BigInt",
+				"(?i)setTimeout\\s*\\(\\s*function\\s*\\(\\s*\\)\\s*{\\s*while\\s*\\(\\s*true\\s*\\)",
+			},
+		},
+		{
+			Name:        "forkBombs",
+			Description: "Fork bomb attacks",
+			Patterns: []string{
+				"(?i)while\\s*\\(\\s*true\\s*\\)\\s*{\\s*fork\\s*\\(\\s*\\)",
+				"(?i)for\\s*\\(;;\\)\\s*{\\s*fork\\s*\\(\\s*\\)",
+				":\\s*\\(\\)\\s*{\\s*:\\|:\\s*&\\s*}\\s*;\\s*:",  // Bash fork bomb
+				"define\\s+f\\s+\\(\\)\\s+\\(f\\)&\\s*f",         // Lisp fork bomb
+				"(?i)while\\s+1;\\s+do\\s+sh\\s+-c\\s+\"\\$0\\s+&\"",
+				"Process\\.fork\\(\\)",
+				"cluster\\.fork\\(\\)",
+				"multiprocessing\\.Process",
+				"pthread_create",
+			},
+		},
+	},
+	Language: map[string][]PatternCategory{
+		"python": {
+			{
+				Name:        "dangerousModules",
+				Description: "Dangerous Python modules",
+				Patterns: []string{
+					"import\\s+os\\s*$",
+					"from\\s+os\\s+import\\s+(system|popen|execl|execle|execlp|execv|execve|execvp|execvpe|spawn)",
+					"import\\s+subprocess",
+					"import\\s+shutil",
+					"import\\s+ctypes",
+					"import\\s+sys",
+					"__import__\\(['\"]os['\"]",
+				},
+			},
+			{
+				Name:        "dangerousOperations",
+				Description: "Dangerous Python operations",
+				Patterns: []string{
+					"open\\(.+,\\s*['\"]w['\"]",
+					"__import__\\(",
+					"globals\\(\\)\\.",
+					"locals\\(\\)\\.",
+					"os\\.system\\(",
+					"os\\.exec\\(",
+					"subprocess\\.Popen\\(",
+					"os\\.fork\\(",
+					"threading\\.Thread\\s*\\(.*bomb\\(\\)",
+					"for\\s*\\(.*\\s*os\\.fork\\(\\)",
+					"while\\s*True\\s*:\\s*os\\.fork\\(\\)",
+				},
+			},
+			{
+				Name:        "pythonResourceDepletion",
+				Description: "Python resource depletion attacks",
+				Patterns: []string{
+					"while\\s+True\\s*:",
+					"[[]\\s*0\\s*\\]\\s*\\*\\s*10\\*\\*\\d+",
+					"range\\s*\\(\\s*10\\s*\\*\\*\\s*\\d{2,}\\s*\\)",
+					"'\\s*'\\s*\\.join\\s*\\(\\s*\\[\\s*'A'\\s*\\]\\s*\\*\\s*10\\*\\*\\d+\\s*\\)",
+					"multiprocessing\\.Pool\\s*\\(\\s*processes\\s*=\\s*\\d{3,}\\s*\\)",
+					"threading\\.Thread\\s*\\(\\s*target\\s*=\\s*.+\\s*\\)\\s*\\.start\\s*\\(\\s*\\)",
+					"\\{\\s*\\.\\*\\s*\\.\\*\\s*\\.\\*\\s*\\.\\*\\s*\\}",  // Regex denial of service
+				},
+			},
+		},
+		"go": {
+			{
+				Name:        "infiniteLoops",
+				Description: "Potential infinite loops",
+				Patterns: []string{
+					"for\\s*{",
+					"for\\s+true\\s*{",
+					"for\\s+;\\s*;\\s*{",
+				},
+			},
+			{
+				Name:        "dangerousOsFunctions",
+				Description: "Dangerous OS functions",
+				Patterns: []string{
+					"os\\.Remove", "os\\.RemoveAll",
+					"os\\.Chdir", "os\\.Chmod",
+					"os\\.Chown", "os\\.Exit",
+					"os\\.Link", "os\\.MkdirAll",
+					"os\\.Rename", "os\\.Symlink",
+				},
+			},
+			{
+				Name:        "goResourceDepletion",
+				Description: "Go resource depletion attacks",
+				Patterns: []string{
+					"make\\s*\\(\\s*\\[\\]\\w+\\s*,\\s*\\d{8,}\\s*\\)",
+					"go\\s+func\\s*\\(\\s*\\)\\s*{\\s*for\\s*{",
+					"for\\s*\\i\\s*:=\\s*0\\s*;\\s*;\\s*i\\+\\+",
+					"runtime\\.GOMAXPROCS\\s*\\(\\s*\\d{3,}\\s*\\)",
+					"len\\s*\\(\\s*make\\s*\\(\\s*\\[\\]byte\\s*,\\s*1<<\\d{2,}\\s*\\)\\s*\\)",
+				},
+			},
+		},
+		"js": {
+			{
+				Name:        "dangerousModules",
+				Description: "Dangerous JS modules",
+				Patterns: []string{
+					"require\\(['\"]fs['\"]",
+					"require\\(['\"]child_process['\"]",
+					"require\\(['\"]http['\"]",
+					"require\\(['\"]https['\"]",
+					"require\\(['\"]os['\"]",
+					"import\\s+.*\\s+from\\s+['\"]fs['\"]",
+					"import\\s+.*\\s+from\\s+['\"]child_process['\"]",
+				},
+			},
+			{
+				Name:        "dangerousOperations",
+				Description: "Dangerous JS operations",
+				Patterns: []string{
+					"process\\.exit",
+					"Function\\(.*\\)",
+					"new Function",
+					"window\\.",
+					"document\\.",
+					"localStorage",
+					"sessionStorage",
+					"indexedDB",
+					"WebSocket",
+				},
+			},
+			{
+				Name:        "jsResourceDepletion",
+				Description: "JavaScript resource depletion attacks",
+				Patterns: []string{
+					"while\\s*\\(\\s*true\\s*\\)",
+					"for\\s*\\(\\s*;;\\s*\\)",
+					"setTimeout\\s*\\(\\s*function\\s*\\(\\s*\\)\\s*{\\s*location\\.reload\\s*\\(\\s*\\)",
+					"\\.repeat\\s*\\(\\s*1e\\d+\\s*\\)",
+					"Array\\s*\\(\\s*1e\\d+\\s*\\)",
+					"new\\s+Array\\s*\\(\\s*1e\\d+\\s*\\)",
+					"\\[\\s*\\.\\.\\.Array\\s*\\(\\s*1e\\d+\\s*\\)\\s*\\]",
+					"(?i)\\(\\+\\[\\]\\+\\[\\]\\+\\[\\]\\+\\[\\]\\+\\[\\]\\+\\[\\]\\+\\[\\]",  // JS obfuscation often used in attacks
+				},
+			},
+		},
+		"cpp": {
+			{
+				Name:        "dangerousOperations",
+				Description: "Dangerous C++ operations",
+				Patterns: []string{
+					"system\\(",
+					"exec\\(",
+					"fork\\(",
+					"popen\\(",
+					"delete\\s+.*\\s+;",
+					"new\\s+.*\\s*;",
+					"std::system",
+				},
+			},
+			{
+				Name:        "cppResourceDepletion",
+				Description: "C++ resource depletion attacks",
+				Patterns: []string{
+					"while\\s*\\(\\s*true\\s*\\)",
+					"for\\s*\\(\\s*;;\\s*\\)",
+					"malloc\\s*\\(\\s*UINT_MAX\\s*\\)",
+					"calloc\\s*\\(\\s*UINT_MAX",
+					"new\\s+char\\s*\\[\\s*UINT_MAX\\s*\\]",
+					"std::vector<\\w+>\\s*\\(\\s*\\d{9,}\\s*\\)",
+					"std::thread\\s*\\(\\s*\\[\\]\\s*\\(\\s*\\)\\s*{\\s*while\\s*\\(\\s*true\\s*\\)",
+					"#include\\s*<fork.h>",
+				},
+			},
+		},
+	},
 }

@@ -1,3 +1,6 @@
 /archive/
 .env
 /vscode/
+
+.env.production
+.env.local

@@ -30,14 +30,10 @@ type ExecutionResponse struct {
 	ExecutionTime string `json:"execution_time,omitempty"`
 }
 
-type ExecutionService struct {
-	maxCodeLen int
-}
+type ExecutionService struct{}
 
 func NewExecutionService() *ExecutionService {
-	return &ExecutionService{
-		maxCodeLen: 10000,
-	}
+	return &ExecutionService{}
 }
 
 func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.WorkerPool) {
@@ -45,7 +41,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, ExecutionResponse{
 			Error:         err.Error(),
-			StatusMessage: "Invalid Request Format",
+			StatusMessage: "API request failed",
 			Success:       false,
 		})
 		return
@@ -56,7 +52,7 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	if err != nil {
 		c.JSON(400, ExecutionResponse{
 			Error:         err.Error(),
-			StatusMessage: "Failed to decode Base64",
+			StatusMessage: "API request failed",
 			Success:       false,
 		})
 		return
@@ -65,43 +61,37 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	code := string(codeBytes)
 	fmt.Println("Time taken to decode base64: ", time.Since(start))
 
-	// Check code length
-	if len(req.Code) > s.maxCodeLen {
-		c.JSON(400, ExecutionResponse{
-			Error:         ErrCodeTooLong.Error(),
-			StatusMessage: "Code Too Long",
-			Success:       false,
-		})
-		return
-	}
-
 	// Sanitize code
-	if err := internal.SanitizeCode(code, req.Language, s.maxCodeLen); err != nil {
+	if err := internal.SanitizeCode(code, req.Language, 10000); err != nil {
 		c.JSON(400, ExecutionResponse{
 			Error:         err.Error(),
-			StatusMessage: "Code failed to pass sanitization",
+			StatusMessage: "API request failed",
 			Success:       false,
 		})
 		return
 	}
 
 	// Execute code using worker pool
-	output := workerPool.ExecuteJob(req.Language, code)
-	logrus.Println("Request: ", req, "Response: ", output)
-	if output.Error != nil {
+	result := workerPool.ExecuteJob(req.Language, code)
+	logrus.Println("Request: ", req, "Response: ", result)
+
+	fmt.Println("Result: ", result.Output)
+
+	if result.Error != nil {
 		c.JSON(400, ExecutionResponse{
-			Error:         output.Error.Error(),
-			StatusMessage: "Runtime Error",
-			Output:        output.Output,
+			Output:        result.Output,
+			Error:         result.Output,
+			StatusMessage: "API request failed",
 			Success:       false,
 		})
 		return
 	}
 
 	c.JSON(200, ExecutionResponse{
-		Output:        output.Output,
-		StatusMessage: "Success",
+		Output:        result.Output,
+		Error:         "",
+		StatusMessage: "API request successful",
 		Success:       true,
-		ExecutionTime: output.ExecutionTime.String(),
+		ExecutionTime: result.ExecutionTime,
 	})
 }

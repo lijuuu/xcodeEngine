@@ -14,9 +14,6 @@ RUN apk add --no-cache \
     curl \
     bash
 
-# Disable network inside container (moved before user switch)
-RUN echo "none /sys/class/net /proc/sys/net/ipv4 /proc/sys/net/ipv6 /proc/sysrq-trigger /proc/sys/kernel/randomize_va_space /proc/sys/vm/mmap_min_addr none rw,nosuid,nodev,noexec,relatime 0 0" >> /etc/fstab
-
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
@@ -43,9 +40,6 @@ RUN chmod 755 /app && chmod 777 /app/temp
 # Set read-only root filesystem with exceptions
 VOLUME ["/tmp", "/var/tmp"]
 RUN chmod 1777 /tmp /var/tmp
-
-# Add security headers
-ENV GOLANG_SECURITY_HEADERS="1"
 
 # Switch to non-root user
 USER appuser

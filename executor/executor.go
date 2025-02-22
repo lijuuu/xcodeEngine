@@ -18,11 +18,6 @@ import (
 	logrus "github.com/sirupsen/logrus"
 )
 
-const (
-	MaxWorkers = 4
-	jobCount   = 1
-)
-
 // Language execution configurations
 var configs = map[string]struct {
 	timeout time.Duration
@@ -83,8 +78,9 @@ type Job struct {
 // Result contains the output of code execution
 type Result struct {
 	Output        string
+	Success       bool
 	Error         error
-	ExecutionTime time.Duration
+	ExecutionTime string
 }
 
 // WorkerPool manages a pool of docker containers for code execution
@@ -94,10 +90,12 @@ type WorkerPool struct {
 	mu           sync.Mutex
 	dockerClient *client.Client
 	logrus       *logrus.Logger
+	maxWorkers   int
+	maxJobCount  int
 }
 
 // NewWorkerPool creates a new worker pool with specified number of containers
-func NewWorkerPool() *WorkerPool {
+func NewWorkerPool(maxWorkers, maxJobCount int) *WorkerPool {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		logrus.Fatalf("Failed to create Docker client: %v", err)
@@ -108,9 +106,11 @@ func NewWorkerPool() *WorkerPool {
 		containers:   make(map[string]*ContainerInfo),
 		dockerClient: dockerClient,
 		logrus:       logrus.New(),
+		maxWorkers:   maxWorkers,
+		maxJobCount:  maxJobCount,
 	}
 
-	logFile, err := os.OpenFile("logs/container.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	logFile, err := os.OpenFile("logs/container.log", os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		logrus.Fatalf("Failed to open log file: %v", err)
 	}
@@ -122,7 +122,7 @@ func NewWorkerPool() *WorkerPool {
 	}
 
 	// Start worker goroutines
-	for i := 0; i < MaxWorkers; i++ {
+	for i := 0; i < pool.maxWorkers; i++ {
 		go pool.worker(i + 1)
 	}
 
@@ -154,21 +154,21 @@ func (p *WorkerPool) initializeContainerPool() error {
 				ID:    c.ID,
 				State: state,
 			}
-			p.logrus.Printf("Found existing worker container: %s (state: %s)", shortID(c.ID), state)
+			p.logrus.Printf("Found existing worker container: %s (state: %s)", (c.ID), state)
 		}
 	}
 
 	// Handle container count
 	existingCount := len(workerContainers)
-	if existingCount > MaxWorkers {
+	if existingCount > p.maxWorkers {
 		p.logrus.Printf("Found %d worker containers, removing excess...", existingCount)
-		for _, cID := range workerContainers[MaxWorkers:] {
+		for _, cID := range workerContainers[p.maxWorkers:] {
 			p.removeContainer(cID)
 		}
-	} else if existingCount < MaxWorkers {
+	} else if existingCount < p.maxWorkers {
 		p.logrus.Printf("Only %d worker containers found, creating %d more...",
-			existingCount, MaxWorkers-existingCount)
-		for i := 0; i < MaxWorkers-existingCount; i++ {
+			existingCount, p.maxWorkers-existingCount)
+		for i := 0; i < p.maxWorkers-existingCount; i++ {
 			if err := p.startContainer(); err != nil {
 				p.logrus.Printf("Failed to start container: %v", err)
 			}
@@ -192,7 +192,7 @@ func (p *WorkerPool) startContainer() error {
 	containerCount := len(p.containers)
 	p.mu.Unlock()
 
-	if containerCount >= MaxWorkers {
+	if containerCount >= p.maxWorkers {
 		p.logrus.Printf("Already have %d containers, not starting new one", containerCount)
 		return nil
 	}
@@ -223,7 +223,7 @@ func (p *WorkerPool) startContainer() error {
 			Memory:   200 * 1024 * 1024, // 500MB
 			NanoCPUs: 1000000000,        // 1 CPU
 		},
-		NetworkMode: "none",                                                     // Disable networking
+		NetworkMode: "none", // Disable networking
 		// SecurityOpt: []string{"seccomp=" + seccompProfile, "no-new-privileges"}, // Pass JSON directly
 	}
 	start := time.Now()
@@ -250,7 +250,7 @@ func (p *WorkerPool) startContainer() error {
 	}
 	p.mu.Unlock()
 
-	p.logrus.Printf("Started new worker container: %s within time %v", shortID(resp.ID), time.Since(start))
+	p.logrus.Printf("Started new worker container: %s within time %v", (resp.ID), time.Since(start))
 	return nil
 }
 
@@ -260,9 +260,9 @@ func (p *WorkerPool) removeContainer(containerID string) {
 
 	// Try to remove the container
 	if err := p.dockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
-		p.logrus.Printf("Failed to remove container %s: %v", shortID(containerID), err)
+		p.logrus.Printf("Failed to remove container %s: %v", (containerID), err)
 	} else {
-		p.logrus.Printf("Removed container: %s", shortID(containerID))
+		p.logrus.Printf("Removed container: %s", (containerID))
 	}
 
 	// Remove from our tracking
@@ -307,7 +307,7 @@ func (p *WorkerPool) checkContainerHealth() {
 	for id, _ := range p.containers {
 		if !runningWorkers[id] {
 			// Container is not running according to Docker
-			p.logrus.Printf("Container %s not running, marking for removal", shortID(id))
+			p.logrus.Printf("Container %s not running, marking for removal", (id))
 			containersToRemove = append(containersToRemove, id)
 		}
 	}
@@ -322,10 +322,10 @@ func (p *WorkerPool) checkContainerHealth() {
 	}
 
 	// Start new containers if needed
-	if currentCount < MaxWorkers {
+	if currentCount < p.maxWorkers {
 		p.logrus.Printf("Container count (%d) below target (%d), starting new containers",
-			currentCount, MaxWorkers)
-		for i := 0; i < MaxWorkers-currentCount; i++ {
+			currentCount, p.maxWorkers)
+		for i := 0; i < p.maxWorkers-currentCount; i++ {
 			start := time.Now()
 			fmt.Println("Starting new container")
 			if err := p.startContainer(); err != nil {
@@ -334,9 +334,9 @@ func (p *WorkerPool) checkContainerHealth() {
 			duration := time.Since(start)
 			fmt.Println("Container started in ", duration)
 		}
-	} else if len(runningWorkers) > MaxWorkers {
+	} else if len(runningWorkers) > p.maxWorkers {
 		p.logrus.Printf("Too many running worker containers (%d), target is %d",
-			len(runningWorkers), MaxWorkers)
+			len(runningWorkers), p.maxWorkers)
 
 		// Identify excess containers to remove
 		p.mu.Lock()
@@ -349,7 +349,7 @@ func (p *WorkerPool) checkContainerHealth() {
 		p.mu.Unlock()
 
 		// Remove excess idle containers
-		excessCount := len(runningWorkers) - MaxWorkers
+		excessCount := len(runningWorkers) - p.maxWorkers
 		for i := 0; i < excessCount && i < len(idleContainers); i++ {
 			p.removeContainer(idleContainers[i])
 		}
@@ -370,14 +370,14 @@ func (p *WorkerPool) worker(id int) {
 		}
 
 		// Execute the job
-		p.logrus.Printf("Worker %d executing in container %s", id, shortID(containerID))
+		p.logrus.Printf("Worker %d executing in container %s", id, (containerID))
 		p.setContainerState(containerID, StateBusy)
 
 		start := time.Now()
-		output, err := p.executeCode(containerID, job.Language, job.Code)
+		output, success, err := p.executeCode(containerID, job.Language, job.Code)
 		duration := time.Since(start)
 		p.setContainerState(containerID, StateIdle)
-		job.Result <- Result{Output: output, Error: err, ExecutionTime: duration}
+		job.Result <- Result{Output: output, Success: success, Error: err, ExecutionTime: fmt.Sprintf("%dms", duration.Milliseconds())}
 	}
 }
 
@@ -418,10 +418,10 @@ func (p *WorkerPool) setContainerState(containerID string, state ContainerState)
 }
 
 // executeCode runs code in a container with the proper language-specific settings
-func (p *WorkerPool) executeCode(containerID, language, code string) (string, error) {
+func (p *WorkerPool) executeCode(containerID, language, code string) (string, bool, error) {
 	config, ok := configs[language]
 	if !ok {
-		return "", fmt.Errorf("unsupported language: %s", language)
+		return "", false, fmt.Errorf("unsupported language: %s", language)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), config.timeout)
@@ -438,38 +438,38 @@ func (p *WorkerPool) executeCode(containerID, language, code string) (string, er
 
 	if ctx.Err() == context.DeadlineExceeded {
 		p.logrus.WithFields(logrus.Fields{
-			"container": shortID(containerID),
+			"container": (containerID),
 			"language":  language,
 			"duration":  duration,
 		}).Warn("Execution timeout after " + duration.String() + "removing and creating new container")
 
 		p.removeContainer(containerID)
 		p.startContainer()
-		return "", fmt.Errorf("timeout after %v", config.timeout)
+		return "", false, fmt.Errorf("timeout after %v", config.timeout)
 	}
 
 	if err != nil {
 		p.logrus.WithFields(logrus.Fields{
-			"container": shortID(containerID),
+			"container": (containerID),
 			"language":  language,
 			"duration":  duration,
 			"error":     err,
 		}).Error("Execution failed")
-		return output.String(), fmt.Errorf("execution error: %w", err)
+		return output.String(), false, fmt.Errorf("execution error: %w", err)
 	}
 
 	p.logrus.WithFields(logrus.Fields{
-		"container": shortID(containerID),
+		"container": (containerID),
 		"language":  language,
 		"duration":  duration,
 	}).Debug("Execution completed")
 
-	return output.String(), nil
+	return output.String(), true, nil
 }
 
 // ExecuteJob submits a job to the worker pool
 func (p *WorkerPool) ExecuteJob(language, code string) Result {
-	result := make(chan Result, jobCount)
+	result := make(chan Result, p.maxJobCount)
 	p.jobs <- Job{Language: language, Code: code, Result: result}
 	return <-result
 }
@@ -485,12 +485,4 @@ func (p *WorkerPool) Shutdown() {
 		p.dockerClient.ContainerRemove(context.Background(), id, container.RemoveOptions{Force: true})
 	}
 	p.mu.Unlock()
-}
-
-// shortID returns a shortened container ID for logging
-func shortID(id string) string {
-	if len(id) > 12 {
-		return id[:12]
-	}
-	return id
 }
