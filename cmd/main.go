@@ -85,7 +85,10 @@ func main() {
 	logrus.SetOutput(logFile1)
 
 	routes := routes.NewExecutionService()
-	workerPool := executor.NewWorkerPool(env.MaxWorkers, env.JobCount)
+	workerPool, err := executor.NewWorkerPool(env.MaxWorkers, env.JobCount)
+	if err != nil {
+		log.Fatalf("Failed to create worker pool: %v", err)
+	}
 
 	// API routes
 	router.GET("/", func(c *gin.Context) {
