@@ -13,13 +13,13 @@ import (
 
 // WorkerPool manages a pool of workers for code execution
 type WorkerPool struct {
-	jobs          chan Job
-	containerMgr  *ContainerManager
-	logger        *logrus.Logger
-	maxWorkers    int
-	maxJobCount   int
-	wg            sync.WaitGroup
-	shutdownChan  chan struct{}
+	jobs         chan Job
+	containerMgr *ContainerManager
+	logger       *logrus.Logger
+	maxWorkers   int
+	maxJobCount  int
+	wg           sync.WaitGroup
+	shutdownChan chan struct{}
 }
 
 // NewWorkerPool initializes a new worker pool
@@ -30,12 +30,12 @@ func NewWorkerPool(maxWorkers, maxJobCount int) (*WorkerPool, error) {
 	}
 
 	pool := &WorkerPool{
-		jobs:          make(chan Job, maxJobCount),
-		containerMgr:  containerMgr,
-		logger:        containerMgr.logger,
-		maxWorkers:    maxWorkers,
-		maxJobCount:   maxJobCount,
-		shutdownChan:  make(chan struct{}),
+		jobs:         make(chan Job, maxJobCount),
+		containerMgr: containerMgr,
+		logger:       containerMgr.logger,
+		maxWorkers:   maxWorkers,
+		maxJobCount:  maxJobCount,
+		shutdownChan: make(chan struct{}),
 	}
 
 	if err := containerMgr.InitializePool(); err != nil {

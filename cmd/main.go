@@ -85,7 +85,7 @@ func main() {
 	logrus.SetOutput(logFile1)
 
 	routes := routes.NewExecutionService()
-	workerPool, err := executor.NewWorkerPool(env.MaxWorkers, env.JobCount)
+	workerPool, err := executor.NewWorkerPool(3, 1)
 	if err != nil {
 		log.Fatalf("Failed to create worker pool: %v", err)
 	}

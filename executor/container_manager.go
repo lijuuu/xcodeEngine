@@ -12,6 +12,36 @@ import (
 	logrus "github.com/sirupsen/logrus"
 )
 
+type ContainerState string
+
+const (
+	StateIdle  ContainerState = "idle"
+	StateBusy  ContainerState = "busy"
+	StateError ContainerState = "error"
+)
+
+// ContainerInfo holds information about a container
+type ContainerInfo struct {
+	ID    string
+	State ContainerState
+}
+
+// Job represents a code execution request
+type Job struct {
+	Language string
+	Code     string
+	Result   chan Result
+}
+
+// Result contains the output of code execution
+type Result struct {
+	Output        string
+	Success       bool
+	Error         error
+	ExecutionTime string
+}
+
+
 // ContainerManager manages Docker containers for the worker pool
 type ContainerManager struct {
 	dockerClient *client.Client
@@ -23,7 +53,7 @@ type ContainerManager struct {
 
 // NewContainerManager creates a new container manager
 func NewContainerManager(maxWorkers int) (*ContainerManager, error) {
-	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
+	dockerClient, err := client.NewClientWithOpts()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %v", err)
 	}
@@ -42,6 +72,8 @@ func NewContainerManager(maxWorkers int) (*ContainerManager, error) {
 		maxWorkers:   maxWorkers,
 	}, nil
 }
+
+
 
 // InitializePool ensures the correct number of containers are running
 func (cm *ContainerManager) InitializePool() error {
@@ -203,6 +235,7 @@ func (cm *ContainerManager) checkHealth() {
 	cm.mu.Lock()
 	var toRemove []string
 	for id := range cm.containers {
+		//add one more layer of health check using container inspect then check state then state.health = healthy
 		if !runningWorkers[id] {
 			cm.logger.Printf("Container %s not running, marking for removal", id[:12])
 			toRemove = append(toRemove, id)
