@@ -21,6 +21,7 @@ type env struct {
 	URL            string
 	Ratelimit      int
 	RatelimitBurst int
+	TOGETHER_API_KEY string
 }
 
 func initENV() env {
@@ -48,12 +49,18 @@ func initENV() env {
 		log.Fatalf("Failed to parse RATE_LIMIT_BURST: %v", err)
 	}
 
+	TOGETHER_API_KEY := os.Getenv("TOGETHER_API_KEY")
+	if TOGETHER_API_KEY == "" {
+		log.Fatalf("TOGETHER_API_KEY is not set")
+	}
+
 	return env{
 		MaxWorkers:     maxWorkers,
 		JobCount:       jobCount,
 		URL:            os.Getenv("URL"),
 		Ratelimit:      rateLimit,
 		RatelimitBurst: rateLimitBurst,
+		TOGETHER_API_KEY: TOGETHER_API_KEY,
 	}
 }
 
@@ -97,8 +104,16 @@ func main() {
 		})
 	})
 	router.POST("/execute", func(c *gin.Context) {
-		routes.HandleExecute(c, workerPool)
+		routes.HandleExecute(c, workerPool, env.TOGETHER_API_KEY)
 	})
+
+	// router.POST("/submit/testcase", func(c *gin.Context) { //query problemid = "uuid"
+	// 	routes.HandleProblemTestCaseSubmit(c, workerPool)
+	// })
+
+	// router.POST("/submit/problem", func(c *gin.Context) { //query problemid = "uuid"
+	// 	routes.HandleProblemCompleteCaseSubmit(c, workerPool)
+	// })
 
 	// Get port from environment or use default
 	port := os.Getenv("PORT")

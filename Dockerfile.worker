@@ -4,7 +4,7 @@ FROM golang:1.22.5-alpine
 # Set the working directory
 WORKDIR /app
 
-# Install required dependencies (NO sudo)
+# Install required dependencies
 RUN apk add --no-cache \
     g++ \
     gcc \
@@ -18,7 +18,7 @@ RUN apk add --no-cache \
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Create the temp directory with appropriate permissions
-RUN mkdir -p /app/temp && chmod 777 /app/temp
+RUN mkdir -p /app/temp && chown appuser:appgroup /app/temp && chmod 770 /app/temp
 
 # Create all the needed files with placeholder content
 RUN echo "// Temporary Go file" > /app/temp/code.go && \
@@ -27,19 +27,17 @@ RUN echo "// Temporary Go file" > /app/temp/code.go && \
     echo "// Temporary C++ file" > /app/temp/code.cpp
 
 # Create compiler output destination
-RUN touch /app/temp/exe && chmod 777 /app/temp/exe
+RUN touch /app/temp/exe && chown appuser:appgroup /app/temp/exe && chmod 770 /app/temp/exe
 
 # Set permissions for all code files to be writable and executable
-RUN chown appuser:appgroup /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp /app/temp/exe && \
-    chmod 666 /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp && \
-    chmod 755 /app/temp/exe
+RUN chown appuser:appgroup /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp && \
+    chmod 660 /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp
 
 # Set permissions for the /app directory structure
-RUN chmod 755 /app && chmod 777 /app/temp
+RUN chmod 755 /app
 
-# Set read-only root filesystem with exceptions
-VOLUME ["/tmp", "/var/tmp"]
-RUN chmod 1777 /tmp /var/tmp
+# Remove unnecessary write permissions from root filesystem
+RUN chmod 555 /bin /usr/bin /usr/local/bin
 
 # Switch to non-root user
 USER appuser

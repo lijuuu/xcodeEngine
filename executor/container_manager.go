@@ -9,6 +9,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/fatih/color"
 	logrus "github.com/sirupsen/logrus"
 )
 
@@ -41,7 +42,6 @@ type Result struct {
 	ExecutionTime string
 }
 
-
 // ContainerManager manages Docker containers for the worker pool
 type ContainerManager struct {
 	dockerClient *client.Client
@@ -59,11 +59,19 @@ func NewContainerManager(maxWorkers int) (*ContainerManager, error) {
 	}
 
 	logger := logrus.New()
+	// Set up file output
 	logFile, err := os.OpenFile("logs/container.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %v", err)
 	}
-	logger.SetOutput(logFile)
+
+	// Multi-output: file and colored terminal
+	logger.SetOutput(os.Stdout)              // Default to stdout
+	logger.AddHook(&fileHook{file: logFile}) // Hook for file logging
+	logger.SetFormatter(&logrus.TextFormatter{
+		ForceColors:   true, // Enable colors in terminal
+		FullTimestamp: true,
+	})
 
 	return &ContainerManager{
 		dockerClient: dockerClient,
@@ -73,13 +81,29 @@ func NewContainerManager(maxWorkers int) (*ContainerManager, error) {
 	}, nil
 }
 
+// fileHook is a custom logrus hook to write logs to a file
+type fileHook struct {
+	file *os.File
+}
 
+func (h *fileHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
+
+func (h *fileHook) Fire(entry *logrus.Entry) error {
+	line, err := entry.String()
+	if err != nil {
+		return err
+	}
+	_, err = h.file.WriteString(line)
+	return err
+}
 
 // InitializePool ensures the correct number of containers are running
 func (cm *ContainerManager) InitializePool() error {
 	containers, err := cm.dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
 	if err != nil {
-		cm.logger.Errorf("failed to list containers: %v", err)
+		cm.logger.WithFields(logrus.Fields{"error": err}).Error("Failed to list containers")
 		return fmt.Errorf("failed to list containers: %v", err)
 	}
 
@@ -93,26 +117,33 @@ func (cm *ContainerManager) InitializePool() error {
 			cm.mu.Lock()
 			cm.containers[c.ID] = &ContainerInfo{ID: c.ID, State: state}
 			cm.mu.Unlock()
-			cm.logger.Printf("Found existing worker container: %s (state: %s)", c.ID[:12], state)
+			cm.logger.WithFields(logrus.Fields{
+				"container_id": c.ID[:12],
+				"state":        state,
+			}).Info(color.GreenString("Found existing worker container"))
 		}
 	}
 
 	// Adjust container count
 	currentCount := len(cm.containers)
 	if currentCount > cm.maxWorkers {
-		cm.logger.Printf("Found %d worker containers, removing excess...", currentCount)
+		cm.logger.WithFields(logrus.Fields{"count": currentCount}).Warn(color.YellowString("Found %d worker containers, removing excess...", currentCount))
 		excess := currentCount - cm.maxWorkers
 		cm.removeExcessContainers(excess)
 	} else if currentCount < cm.maxWorkers {
-		cm.logger.Printf("Only %d worker containers found, creating %d more...", currentCount, cm.maxWorkers-currentCount)
+		cm.logger.WithFields(logrus.Fields{
+			"current": currentCount,
+			"needed":  cm.maxWorkers - currentCount,
+		}).Info(color.GreenString("Only %d worker containers found, creating %d more...", currentCount, cm.maxWorkers-currentCount))
 		for i := 0; i < cm.maxWorkers-currentCount; i++ {
 			if err := cm.StartContainer(); err != nil {
-				cm.logger.Printf("Failed to start container: %v", err)
+				cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to start container"))
 			}
 		}
 	}
 
 	if len(cm.containers) == 0 {
+		cm.logger.Error(color.RedString("Failed to initialize container pool: no containers available"))
 		return fmt.Errorf("failed to initialize container pool: no containers available")
 	}
 	return nil
@@ -125,7 +156,7 @@ func (cm *ContainerManager) StartContainer() error {
 	cm.mu.Lock()
 	if len(cm.containers) >= cm.maxWorkers {
 		cm.mu.Unlock()
-		cm.logger.Printf("Already have %d containers, not starting new one", len(cm.containers))
+		cm.logger.WithFields(logrus.Fields{"count": len(cm.containers)}).Warn(color.YellowString("Already have %d containers, not starting new one", len(cm.containers)))
 		return nil
 	}
 	cm.mu.Unlock()
@@ -134,41 +165,53 @@ func (cm *ContainerManager) StartContainer() error {
 		Image: "worker",
 		Tty:   true,
 	}
-	// seccompProfile := `{
-	// 	"defaultAction": "SCMP_ACT_ALLOW",
-	// 	"architectures": ["SCMP_ARCH_X86_64"],
-	// 	"syscalls": [
-	// 		{ "names": ["setuid", "setgid", "kill", "clone", "fork", "vfork", "socket", "connect", "bind", "accept", "ptrace", "personality", "syslog", "sysctl"], "action": "SCMP_ACT_DENY" }
-	// 	]
-	// }`
-	// if err := json.Unmarshal([]byte(seccompProfile), &map[string]interface{}{}); err != nil {
-	// 	return fmt.Errorf("invalid seccomp profile: %v", err)
-	// }
+
+// 	seccompProfile := `{
+//     "defaultAction": "SCMP_ACT_ERRNO",
+//     "architectures": ["SCMP_ARCH_X86_64"],
+//     "syscalls": [
+//         {
+//             "names": [
+//                 "fork", "vfork", "clone"
+//             ],
+//             "action": "SCMP_ACT_TRACE"
+//         }
+//     ]
+// }
+// `
 
 	hostConfig := &container.HostConfig{
 		Resources: container.Resources{
-			Memory:   200 * 1024 * 1024, // 200MB
-			NanoCPUs: 1000000000,        // 1 CPU
+			Memory:    200 * 1024 * 1024,
+			CPUShares: 256,
+			// PidsLimit: &[]int64{20}[0],
+			// Ulimits:   []*container.Ulimit{{Name: "nproc", Hard: 50, Soft: 50}},
 		},
 		NetworkMode: "none",
+		// SecurityOpt: []string{"seccomp=" + seccompProfile},
 	}
 
 	resp, err := cm.dockerClient.ContainerCreate(ctx, config, hostConfig, nil, nil, "")
 	if err != nil {
-		cm.logger.Errorf("failed to create container: %v", err)
+		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to create container"))
 		return fmt.Errorf("failed to create container: %v", err)
 	}
 
 	if err := cm.dockerClient.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		cm.dockerClient.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
-		cm.logger.Errorf("failed to start container %s: %v", resp.ID[:12], err)
+		cm.logger.WithFields(logrus.Fields{
+			"container_id": resp.ID[:12],
+			"error":        err,
+		}).Error(color.RedString("Failed to start container"))
 		return fmt.Errorf("failed to start container: %v", err)
 	}
 
 	cm.mu.Lock()
 	cm.containers[resp.ID] = &ContainerInfo{ID: resp.ID, State: StateIdle}
 	cm.mu.Unlock()
-	cm.logger.Printf("Started new worker container: %s", resp.ID[:12])
+	cm.logger.WithFields(logrus.Fields{
+		"container_id": resp.ID[:12],
+	}).Info(color.GreenString("Started new worker container"))
 
 	return nil
 }
@@ -178,13 +221,18 @@ func (cm *ContainerManager) RemoveContainer(containerID string) {
 	ctx := context.Background()
 
 	if err := cm.dockerClient.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: true}); err != nil {
-		cm.logger.Printf("Failed to remove container %s: %v", containerID[:12], err)
+		cm.logger.WithFields(logrus.Fields{
+			"container_id": containerID[:12],
+			"error":        err,
+		}).Error(color.RedString("Failed to remove container"))
 	}
 
 	cm.mu.Lock()
 	delete(cm.containers, containerID)
 	cm.mu.Unlock()
-	cm.logger.Printf("Removed container: %s", containerID[:12])
+	cm.logger.WithFields(logrus.Fields{
+		"container_id": containerID[:12],
+	}).Info(color.GreenString("Removed container"))
 }
 
 // removeExcessContainers removes excess containers beyond maxWorkers
@@ -221,7 +269,7 @@ func (cm *ContainerManager) checkHealth() {
 
 	containers, err := cm.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
-		cm.logger.Printf("Failed to list containers: %v", err)
+		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to list containers"))
 		return
 	}
 
@@ -235,9 +283,10 @@ func (cm *ContainerManager) checkHealth() {
 	cm.mu.Lock()
 	var toRemove []string
 	for id := range cm.containers {
-		//add one more layer of health check using container inspect then check state then state.health = healthy
 		if !runningWorkers[id] {
-			cm.logger.Printf("Container %s not running, marking for removal", id[:12])
+			cm.logger.WithFields(logrus.Fields{
+				"container_id": id[:12],
+			}).Warn(color.YellowString("Container not running, marking for removal"))
 			toRemove = append(toRemove, id)
 		}
 	}
@@ -249,13 +298,18 @@ func (cm *ContainerManager) checkHealth() {
 	}
 
 	if currentCount < cm.maxWorkers {
+		cm.logger.WithFields(logrus.Fields{
+			"current": currentCount,
+			"needed":  cm.maxWorkers - currentCount,
+		}).Info(color.GreenString("Starting %d replacement containers", cm.maxWorkers-currentCount))
 		for i := 0; i < cm.maxWorkers-currentCount; i++ {
 			if err := cm.StartContainer(); err != nil {
-				cm.logger.Printf("Failed to start replacement container: %v", err)
+				cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to start replacement container"))
 			}
 		}
 	} else if len(runningWorkers) > cm.maxWorkers {
 		excess := len(runningWorkers) - cm.maxWorkers
+		cm.logger.WithFields(logrus.Fields{"excess": excess}).Warn(color.YellowString("Removing %d excess containers", excess))
 		cm.removeExcessContainers(excess)
 	}
 }
@@ -271,12 +325,16 @@ func (cm *ContainerManager) GetAvailableContainer() (string, error) {
 			if info.State == StateIdle {
 				info.State = StateBusy
 				cm.mu.Unlock()
+				cm.logger.WithFields(logrus.Fields{
+					"container_id": id[:12],
+				}).Info(color.GreenString("Assigned container to job"))
 				return id, nil
 			}
 		}
 		cm.mu.Unlock()
 		time.Sleep(retryDelay)
 	}
+	cm.logger.WithFields(logrus.Fields{"retries": maxRetries}).Error(color.RedString("No available containers after %d retries", maxRetries))
 	return "", fmt.Errorf("no available containers after %d retries", maxRetries)
 }
 
@@ -286,6 +344,10 @@ func (cm *ContainerManager) SetContainerState(containerID string, state Containe
 	defer cm.mu.Unlock()
 	if container, exists := cm.containers[containerID]; exists {
 		container.State = state
+		cm.logger.WithFields(logrus.Fields{
+			"container_id": containerID[:12],
+			"state":        state,
+		}).Info(color.GreenString("Updated container state"))
 	}
 }
 
@@ -297,9 +359,12 @@ func (cm *ContainerManager) Shutdown() {
 
 	for id := range cm.containers {
 		cm.dockerClient.ContainerRemove(ctx, id, container.RemoveOptions{Force: true})
-		cm.logger.Printf("Shutdown: Removed container %s", id[:12])
+		cm.logger.WithFields(logrus.Fields{
+			"container_id": id[:12],
+		}).Info(color.GreenString("Shutdown: Removed container"))
 	}
 	cm.containers = make(map[string]*ContainerInfo)
+	cm.logger.Info(color.GreenString("Shutdown complete"))
 }
 
 // ContainerCount returns the current number of containers

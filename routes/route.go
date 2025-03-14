@@ -9,7 +9,6 @@ import (
 	"xcodeengine/internal"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -36,7 +35,7 @@ func NewExecutionService() *ExecutionService {
 	return &ExecutionService{}
 }
 
-func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.WorkerPool) {
+func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.WorkerPool, TOGETHER_API_KEY string) {
 	var req ExecutionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, ExecutionResponse{
@@ -61,6 +60,26 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 	code := string(codeBytes)
 	fmt.Println("Time taken to decode base64: ", time.Since(start))
 
+	// 🔹 LLM-Based Code Analysis
+	isGoodCode, feedback, err := internal.CallLLMAPI(code, req.Language, TOGETHER_API_KEY)
+	if err != nil {
+		c.JSON(500, ExecutionResponse{
+			Error:         err.Error(),
+			StatusMessage: "LLM analysis failed",
+			Success:       false,
+		})
+		return
+	}
+
+	if !isGoodCode {
+		c.JSON(400, ExecutionResponse{
+			Error:         feedback,
+			StatusMessage: "Code rejected due to bad practices",
+			Success:       false,
+		})
+		return
+	}
+
 	// Sanitize code
 	if err := internal.SanitizeCode(code, req.Language, 10000); err != nil {
 		c.JSON(400, ExecutionResponse{
@@ -73,15 +92,15 @@ func (s *ExecutionService) HandleExecute(c *gin.Context, workerPool *executor.Wo
 
 	// Execute code using worker pool
 	result := workerPool.ExecuteJob(req.Language, code)
-	logrus.Println("Request: ", req, "Response: ", result)
+	// logrus.Println("Request: ", req, "Response: ", result)
 
-	fmt.Println("Result: ", result.Output)
+	// fmt.Println("Result: ", result.Output)
 
 	if result.Error != nil {
 		c.JSON(400, ExecutionResponse{
 			Output:        result.Output,
 			Error:         result.Output,
-			StatusMessage: "API request failed",
+			StatusMessage: "API request failed" + result.Error.Error(),
 			Success:       false,
 		})
 		return
