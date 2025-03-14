@@ -16,6 +16,7 @@ type Config struct {
 	Ratelimit      int
 	RatelimitBurst int
 	Port           string
+	NatsURL        string
 }
 
 func LoadConfig() Config {
@@ -32,6 +33,7 @@ func LoadConfig() Config {
 		RatelimitBurst: getEnvInt("RATE_LIMIT_BURST", 20),
 		TogetherAPIKey: getEnv("TOGETHER_API_KEY", ""),
 		Port:           getEnv("PORT", "8000"),
+		NatsURL:        getEnv("NATSURL", "nats://localhost:4222"),
 	}
 }
 

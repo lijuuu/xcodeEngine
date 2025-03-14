@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"time"
@@ -30,20 +29,16 @@ type CompilerResponse struct {
 	ExecutionTime string `json:"execution_time,omitempty"`
 }
 
-type CompilerService struct {
-	compilergrpc.UnimplementedCompilerServiceServer
-}
+type CompilerService struct{}
 
 func NewCompilerService() *CompilerService {
-	return &CompilerService{
-		compilergrpc.UnimplementedCompilerServiceServer{},
-	}
+	return &CompilerService{}
 }
 
-func (s *CompilerService) Compile(ctx context.Context, req *compilergrpc.CompileRequest) (*compilergrpc.CompileResponse, error) {
+func (s *CompilerService) Compile(code string, language string) (*compilergrpc.CompileResponse, error) {
 	start := time.Now()
 
-	codeBytes, err := base64.StdEncoding.DecodeString(req.Code)
+	codeBytes, err := base64.StdEncoding.DecodeString(code)
 	if err != nil {
 		return &compilergrpc.CompileResponse{
 			Success:       false,
@@ -52,10 +47,10 @@ func (s *CompilerService) Compile(ctx context.Context, req *compilergrpc.Compile
 		}, nil
 	}
 
-	code := string(codeBytes)
+	code = string(codeBytes)
 
 	// Sanitize code
-	if err := internal.SanitizeCode(code, req.Language, 10000); err != nil {
+	if err := internal.SanitizeCode(code, language, 10000); err != nil {
 		return &compilergrpc.CompileResponse{
 			Success:       false,
 			Error:         err.Error(),
@@ -73,7 +68,7 @@ func (s *CompilerService) Compile(ctx context.Context, req *compilergrpc.Compile
 	}
 
 	// Execute code using worker pool
-	result := workerPool.ExecuteJob(req.Language, code)
+	result := workerPool.ExecuteJob(language, code)
 
 	if result.Error != nil {
 		return &compilergrpc.CompileResponse{
