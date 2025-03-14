@@ -4,3 +4,7 @@
 
 .env.production
 .env.local
+container.log
+server.log
+
+/logs/*

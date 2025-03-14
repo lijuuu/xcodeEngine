@@ -3441,3 +3441,447 @@ time="2025-03-14T09:22:45+05:30" level=info msg="Failed to start replacement con
 [36mINFO[0m[2025-03-14T12:53:48+05:30] Worker 1 started                             
 [36mINFO[0m[2025-03-14T12:53:48+05:30] Worker 3 started                             
 [36mINFO[0m[2025-03-14T12:53:48+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T12:56:56+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=5397614e9122 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T12:56:56+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=03a5e1d529d3 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T12:56:56+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ce83a76fb96a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T12:56:56+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T12:56:56+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T12:56:56+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T12:57:00+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=ce83a76fb96a
+[36mINFO[0m[2025-03-14T12:57:00+05:30] Worker 1 executing in container ce83a76fb96a 
+[36mINFO[0m[2025-03-14T12:57:00+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ce83a76fb96a [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T12:57:00+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ce83a76fb96a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T12:57:01+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=03a5e1d529d3
+[36mINFO[0m[2025-03-14T12:57:01+05:30] Worker 2 executing in container 03a5e1d529d3 
+[36mINFO[0m[2025-03-14T12:57:01+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=03a5e1d529d3 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T12:57:02+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=03a5e1d529d3 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T12:57:05+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=5397614e9122
+[36mINFO[0m[2025-03-14T12:57:05+05:30] Worker 3 executing in container 5397614e9122 
+[36mINFO[0m[2025-03-14T12:57:05+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=5397614e9122 [36mstate[0m=busy
+[33mWARN[0m[2025-03-14T12:57:15+05:30] Execution timeout, removing and replacing container  [33mcontainer[0m=5397614e9122 [33mduration[0m=10.004210585s [33mlanguage[0m=go
+[36mINFO[0m[2025-03-14T12:57:16+05:30] [32mRemoved container[0m                    [36mcontainer_id[0m=5397614e9122
+[36mINFO[0m[2025-03-14T12:57:16+05:30] [32mStarted new worker container[0m         [36mcontainer_id[0m=c562c4a93612
+[36mINFO[0m[2025-03-14T15:07:24+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=c562c4a93612 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T15:07:24+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=03a5e1d529d3 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T15:07:24+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ce83a76fb96a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T15:07:24+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T15:07:24+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T15:07:24+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:13:41+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=c562c4a93612 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:13:41+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=03a5e1d529d3 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:13:41+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ce83a76fb96a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:13:41+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:13:41+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:13:41+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:16:47+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=c562c4a93612 [36mstate[0m=error
+[36mINFO[0m[2025-03-14T17:16:47+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=03a5e1d529d3 [36mstate[0m=error
+[36mINFO[0m[2025-03-14T17:16:47+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ce83a76fb96a [36mstate[0m=error
+[36mINFO[0m[2025-03-14T17:16:47+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:16:47+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:16:47+05:30] Worker 2 started                             
+[33mWARN[0m[2025-03-14T17:16:48+05:30] [33mContainer not running, marking for removal[0m  [33mcontainer_id[0m=03a5e1d529d3
+[33mWARN[0m[2025-03-14T17:16:48+05:30] [33mContainer not running, marking for removal[0m  [33mcontainer_id[0m=ce83a76fb96a
+[33mWARN[0m[2025-03-14T17:16:48+05:30] [33mContainer not running, marking for removal[0m  [33mcontainer_id[0m=c562c4a93612
+[36mINFO[0m[2025-03-14T17:16:48+05:30] [32mRemoved container[0m                    [36mcontainer_id[0m=03a5e1d529d3
+[36mINFO[0m[2025-03-14T17:16:48+05:30] [32mRemoved container[0m                    [36mcontainer_id[0m=ce83a76fb96a
+[36mINFO[0m[2025-03-14T17:16:48+05:30] [32mRemoved container[0m                    [36mcontainer_id[0m=c562c4a93612
+[36mINFO[0m[2025-03-14T17:16:48+05:30] [32mStarting 3 replacement containers[0m    [36mcurrent[0m=0 [36mneeded[0m=3
+[36mINFO[0m[2025-03-14T17:16:52+05:30] [32mStarted new worker container[0m         [36mcontainer_id[0m=e278dd2a547a
+[36mINFO[0m[2025-03-14T17:16:52+05:30] [32mStarted new worker container[0m         [36mcontainer_id[0m=7596440e992e
+[36mINFO[0m[2025-03-14T17:16:52+05:30] [32mStarted new worker container[0m         [36mcontainer_id[0m=ad2f8936618d
+[36mINFO[0m[2025-03-14T17:51:43+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:43+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:43+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:43+05:30] [32mOnly 3 worker containers found, creating 1 more...[0m  [36mcurrent[0m=3 [36mneeded[0m=1
+[36mINFO[0m[2025-03-14T17:51:43+05:30] [32mStarted new worker container[0m         [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:51:43+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:51:43+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:51:43+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=7596440e992e
+[36mINFO[0m[2025-03-14T17:51:43+05:30] Worker 1 executing in container 7596440e992e 
+[36mINFO[0m[2025-03-14T17:51:43+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:51:43+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:51:43+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:51:44+05:30] Execution failed                              [31mcontainer[0m=7596440e992e [31mduration[0m=799.625019ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:51:44+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:51+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:51+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:51+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:51+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:51:51+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:51:51+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:51:51+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=ad2f8936618d
+[36mINFO[0m[2025-03-14T17:51:51+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:51:51+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:51:51+05:30] Worker 4 executing in container ad2f8936618d 
+[36mINFO[0m[2025-03-14T17:51:51+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:51:52+05:30] Execution failed                              [31mcontainer[0m=ad2f8936618d [31mduration[0m=683.10359ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:51:52+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:01+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:52:01+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:52:01+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:52:01+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:52:01+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:52:01+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:52:01+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:52:01+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:05+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:05+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:05+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:05+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:05+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:52:05+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:52:05+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:52:05+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:52:05+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:52:05+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:52:05+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:52:06+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=694.341668ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:52:06+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:27+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:27+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:27+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:27+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:27+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:52:27+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=7596440e992e
+[36mINFO[0m[2025-03-14T17:52:27+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:52:27+05:30] Worker 4 executing in container 7596440e992e 
+[36mINFO[0m[2025-03-14T17:52:27+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:52:27+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:52:27+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:52:27+05:30] Execution failed                              [31mcontainer[0m=7596440e992e [31mduration[0m=122.998641ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:52:27+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:29+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:52:29+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:52:29+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:52:29+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:52:29+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=ad2f8936618d
+[36mINFO[0m[2025-03-14T17:52:29+05:30] Worker 4 executing in container ad2f8936618d 
+[36mINFO[0m[2025-03-14T17:52:29+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:52:29+05:30] Execution failed                              [31mcontainer[0m=ad2f8936618d [31mduration[0m=124.474076ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:52:29+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:41+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:41+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:41+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:41+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:41+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:52:41+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:52:41+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:52:41+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:52:41+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=e278dd2a547a
+[36mINFO[0m[2025-03-14T17:52:41+05:30] Worker 4 executing in container e278dd2a547a 
+[36mINFO[0m[2025-03-14T17:52:41+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:52:41+05:30] Execution failed                              [31mcontainer[0m=e278dd2a547a [31mduration[0m=663.482203ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:52:41+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:53+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:53+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:53+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:53+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:52:53+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:52:53+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:52:53+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:52:53+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:52:53+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:52:53+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:52:53+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:52:53+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:03+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:03+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:03+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:03+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:03+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:53:03+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:53:03+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:53:03+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:53:03+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=7596440e992e
+[36mINFO[0m[2025-03-14T17:53:03+05:30] Worker 4 executing in container 7596440e992e 
+[36mINFO[0m[2025-03-14T17:53:03+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:53:03+05:30] Execution failed                              [31mcontainer[0m=7596440e992e [31mduration[0m=116.695046ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:53:03+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:17+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:17+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:17+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:17+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:17+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:53:17+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:53:17+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:53:17+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:53:17+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:53:17+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:53:17+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:53:17+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=127.553778ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:53:17+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:18+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:18+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:18+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:18+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:18+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:53:18+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:53:18+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:53:18+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:53:18+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:53:18+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:53:18+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:53:18+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=122.20785ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:53:18+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:25+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:25+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:25+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:25+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:25+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:53:25+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:53:25+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:53:25+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:53:25+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:53:25+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:53:25+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:53:25+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=127.022485ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:53:25+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:31+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:31+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:31+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:31+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:53:31+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:53:31+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:53:31+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:53:31+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:53:31+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:53:31+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:53:31+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:53:31+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=127.317151ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:53:31+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:54:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:54:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:54:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:54:01+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:54:01+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:54:01+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:54:01+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:54:01+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:54:01+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:54:01+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:54:01+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:54:01+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=122.704138ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:54:01+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:56:38+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:56:38+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:56:38+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:56:38+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:56:38+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:56:38+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:56:38+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=e278dd2a547a
+[36mINFO[0m[2025-03-14T17:56:38+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:56:38+05:30] Worker 4 executing in container e278dd2a547a 
+[36mINFO[0m[2025-03-14T17:56:38+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:56:38+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:56:39+05:30] Execution failed                              [31mcontainer[0m=e278dd2a547a [31mduration[0m=147.537957ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:56:39+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:07+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:57:07+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:57:07+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:07+05:30] Worker 1 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:57:07+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:07+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:57:07+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:57:07+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=136.401645ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:57:07+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:09+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:09+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:09+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:09+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:09+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:09+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:57:09+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:57:09+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:57:09+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:09+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:57:09+05:30] Worker 1 started                             
+[31mERRO[0m[2025-03-14T17:57:09+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=120.407452ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:57:09+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:10+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:10+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:10+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:10+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:10+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:10+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:57:10+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:57:10+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:57:10+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:10+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:57:10+05:30] Worker 2 started                             
+[31mERRO[0m[2025-03-14T17:57:10+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=118.64744ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:57:10+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:26+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:26+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:26+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:26+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:26+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:57:26+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:57:26+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:57:26+05:30] Worker 3 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:57:26+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:26+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:26+05:30] Worker 1 started                             
+[31mERRO[0m[2025-03-14T17:57:26+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=127.960079ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:57:26+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:36+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:36+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:36+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:36+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:36+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:36+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:57:36+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=7596440e992e
+[36mINFO[0m[2025-03-14T17:57:36+05:30] Worker 4 executing in container 7596440e992e 
+[36mINFO[0m[2025-03-14T17:57:36+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:36+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:57:36+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:57:37+05:30] Execution failed                              [31mcontainer[0m=7596440e992e [31mduration[0m=136.916897ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:57:37+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:42+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:42+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:42+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:42+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:42+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:42+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:57:42+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:57:42+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:42+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:57:42+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:57:42+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:57:42+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=129.046651ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:57:42+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:55+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:55+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:55+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:55+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:55+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:55+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=7596440e992e
+[36mINFO[0m[2025-03-14T17:57:55+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:57:55+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:57:55+05:30] Worker 4 executing in container 7596440e992e 
+[36mINFO[0m[2025-03-14T17:57:55+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:55+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:57:56+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:57+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:57+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:57+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:57+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:57:57+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:57:57+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:57:57+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:57:57+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:57:57+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:57:57+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:57:57+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:57:57+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:24+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:24+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:24+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:24+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:24+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:58:24+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:58:24+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:58:24+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:58:24+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:58:24+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:58:24+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:58:24+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=123.432831ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:58:24+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:29+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:29+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:58:29+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:58:29+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:58:29+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T17:58:29+05:30] Worker 2 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T17:58:29+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:58:29+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:58:29+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:32+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:32+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:32+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:32+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:32+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:58:32+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:58:32+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=7596440e992e
+[36mINFO[0m[2025-03-14T17:58:32+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:58:32+05:30] Worker 4 executing in container 7596440e992e 
+[36mINFO[0m[2025-03-14T17:58:32+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:58:32+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T17:58:32+05:30] Execution failed                              [31mcontainer[0m=7596440e992e [31mduration[0m=125.290465ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:58:32+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:35+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:35+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:35+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:35+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:35+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:58:35+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=ad2f8936618d
+[36mINFO[0m[2025-03-14T17:58:35+05:30] Worker 3 executing in container ad2f8936618d 
+[36mINFO[0m[2025-03-14T17:58:35+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T17:58:35+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:58:35+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:58:35+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:58:35+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:40+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:40+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:40+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:40+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T17:58:40+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T17:58:40+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T17:58:40+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T17:58:40+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=ad2f8936618d
+[36mINFO[0m[2025-03-14T17:58:40+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T17:58:40+05:30] Worker 4 executing in container ad2f8936618d 
+[36mINFO[0m[2025-03-14T17:58:40+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=busy
+[31mERRO[0m[2025-03-14T17:58:41+05:30] Execution failed                              [31mcontainer[0m=ad2f8936618d [31mduration[0m=123.44876ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T17:58:41+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:04+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:04+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:04+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:04+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:04+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T18:00:04+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T18:00:04+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T18:00:04+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T18:00:04+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T18:00:04+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T18:00:04+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T18:00:04+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:07+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:07+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T18:00:07+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T18:00:07+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T18:00:07+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=21df019d5f72
+[36mINFO[0m[2025-03-14T18:00:07+05:30] Worker 4 executing in container 21df019d5f72 
+[36mINFO[0m[2025-03-14T18:00:07+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T18:00:07+05:30] Worker 3 started                             
+[31mERRO[0m[2025-03-14T18:00:07+05:30] Execution failed                              [31mcontainer[0m=21df019d5f72 [31mduration[0m=129.512332ms [31merror[0m="exit status 1" [31mlanguage[0m=go
+[36mINFO[0m[2025-03-14T18:00:07+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:11+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=21df019d5f72 [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:11+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=ad2f8936618d [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:11+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=7596440e992e [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:11+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle
+[36mINFO[0m[2025-03-14T18:00:11+05:30] Worker 4 started                             
+[36mINFO[0m[2025-03-14T18:00:11+05:30] Worker 3 started                             
+[36mINFO[0m[2025-03-14T18:00:11+05:30] [32mAssigned container to job[0m            [36mcontainer_id[0m=e278dd2a547a
+[36mINFO[0m[2025-03-14T18:00:11+05:30] Worker 4 executing in container e278dd2a547a 
+[36mINFO[0m[2025-03-14T18:00:11+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=busy
+[36mINFO[0m[2025-03-14T18:00:11+05:30] Worker 2 started                             
+[36mINFO[0m[2025-03-14T18:00:11+05:30] Worker 1 started                             
+[36mINFO[0m[2025-03-14T18:00:11+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=e278dd2a547a [36mstate[0m=idle

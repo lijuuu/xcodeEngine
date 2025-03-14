@@ -1,128 +1,85 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"os"
-	"strconv"
-	"xcodeengine/executor"
-	"xcodeengine/routes"
+	"net"
+	"xcodeengine/config"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/time/rate"
+	"google.golang.org/grpc"
+
+	"xcodeengine/service"
+
+	compilergrpc "github.com/lijuuu/GlobalProtoXcode/Compiler"
+	"go.uber.org/zap"
 )
 
-type env struct {
-	MaxWorkers     int
-	JobCount       int
-	URL            string
-	Ratelimit      int
-	RatelimitBurst int
-	TOGETHER_API_KEY string
-}
-
-func initENV() env {
-	if err := godotenv.Load(".env.production"); err != nil {
-		log.Fatalf("Error loading .env.production file: %v", err)
-	}
-
-	maxWorkers, err := strconv.Atoi(os.Getenv("MAX_WORKERS"))
-	if err != nil {
-		log.Fatalf("Failed to parse MAX_WORKERS: %v", err)
-	}
-
-	jobCount, err := strconv.Atoi(os.Getenv("JOB_COUNT"))
-	if err != nil {
-		log.Fatalf("Failed to parse JOB_COUNT: %v", err)
-	}
-
-	rateLimit, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
-	if err != nil {
-		log.Fatalf("Failed to parse RATE_LIMIT: %v", err)
-	}
-
-	rateLimitBurst, err := strconv.Atoi(os.Getenv("RATE_LIMIT_BURST"))
-	if err != nil {
-		log.Fatalf("Failed to parse RATE_LIMIT_BURST: %v", err)
-	}
-
-	TOGETHER_API_KEY := os.Getenv("TOGETHER_API_KEY")
-	if TOGETHER_API_KEY == "" {
-		log.Fatalf("TOGETHER_API_KEY is not set")
-	}
-
-	return env{
-		MaxWorkers:     maxWorkers,
-		JobCount:       jobCount,
-		URL:            os.Getenv("URL"),
-		Ratelimit:      rateLimit,
-		RatelimitBurst: rateLimitBurst,
-		TOGETHER_API_KEY: TOGETHER_API_KEY,
-	}
-}
-
 func main() {
+	// Initialize zap logger
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
 
-	env := initENV()
+	config := config.LoadConfig()
 
-	// Create a new RateLimiter instance
-	rateLimiter := rate.NewLimiter(rate.Limit(float64(env.Ratelimit)), int(env.RatelimitBurst))
+	// // Create a new RateLimiter instance
+	// rateLimiter := rate.NewLimiter(rate.Limit(float64(config.Ratelimit)), config.RatelimitBurst)
 
-	// Create a new Gin router
-	router := gin.Default()
-	//cors
-	router.Use(cors.Default())
-	// Use the RateLimiter as middleware
-	router.Use(func(c *gin.Context) {
-		if !rateLimiter.Allow() {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Rate limit exceeded !"})
-			c.Abort()
-			return
-		}
-		c.Next() // Proceed to the next handler
-	})
-
-	logFile1, err := os.OpenFile("logs/server.log", os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("Failed to open log file: %v", err)
-	}
-	logrus.SetOutput(logFile1)
-
-	routes := routes.NewExecutionService()
-	workerPool, err := executor.NewWorkerPool(3, 1)
-	if err != nil {
-		log.Fatalf("Failed to create worker pool: %v", err)
-	}
-
-	// API routes
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Go Code Execution Service",
-		})
-	})
-	router.POST("/execute", func(c *gin.Context) {
-		routes.HandleExecute(c, workerPool, env.TOGETHER_API_KEY)
-	})
-
-	// router.POST("/submit/testcase", func(c *gin.Context) { //query problemid = "uuid"
-	// 	routes.HandleProblemTestCaseSubmit(c, workerPool)
+	// // Create a new Gin router
+	// router := gin.Default()
+	// //cors
+	// router.Use(cors.Default())
+	// // Use the RateLimiter as middleware
+	// router.Use(func(c *gin.Context) {
+	// 	if !rateLimiter.Allow() {
+	// 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Rate limit exceeded !"})
+	// 		c.Abort()
+	// 		return
+	// 	}
+	// 	c.Next() // Proceed to the next handler
 	// })
 
-	// router.POST("/submit/problem", func(c *gin.Context) { //query problemid = "uuid"
-	// 	routes.HandleProblemCompleteCaseSubmit(c, workerPool)
+	// logFile1, err := os.OpenFile("logs/server.log", os.O_WRONLY|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	log.Fatalf("Failed to open log file: %v", err)
+	// }
+	// logrus.SetOutput(logFile1)
+
+	// routes := routes.NewExecutionService()
+	// workerPool, err := executor.NewWorkerPool(config.MaxWorkers, config.JobCount)
+	// if err != nil {
+	// 	log.Fatalf("Failed to create worker pool: %v", err)
+	// }
+
+	// // API routes
+	// router.GET("/", func(c *gin.Context) {
+	// 	c.JSON(200, gin.H{
+	// 		"message": "Go Code Execution Service",
+	// 	})
+	// })
+	// router.POST("/execute", func(c *gin.Context) {
+	// 	routes.HandleExecute(c, workerPool)
 	// })
 
-	// Get port from environment or use default
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
-	}
+	// log.Printf("Starting server on port %s...", config.Port)
+	// if err := router.Run(":" + config.Port); err != nil {
+	// 	log.Fatalf("Server failed to start: %v", err)
+	// }
 
-	log.Printf("Starting server on port %s...", port)
-	if err := router.Run(":" + port); err != nil {
-		log.Fatalf("Server failed to start: %v", err)
+	listener, err := net.Listen("tcp", ":"+config.Port)
+	if err != nil {
+		logger.Fatal("Failed to listen",
+			zap.String("port", config.Port),
+			zap.Error(err))
+	}
+	logger.Info("Server listening",
+		zap.String("port", config.Port))
+
+	compilerService := service.NewCompilerService()
+
+	grpcServer := grpc.NewServer()
+	compilergrpc.RegisterCompilerServiceServer(grpcServer, compilerService)
+	logger.Info("gRPC server registered")
+
+	if err := grpcServer.Serve(listener); err != nil {
+		logger.Fatal("Failed to serve",
+			zap.Error(err))
 	}
 }
