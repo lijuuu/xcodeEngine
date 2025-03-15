@@ -3,20 +3,22 @@ package natshandler
 import (
 	"encoding/json"
 	"log"
+	"xcodeengine/executor"
 	"xcodeengine/service"
 
-	"github.com/nats-io/nats.go"
 	"xcodeengine/model"
+
+	"github.com/nats-io/nats.go"
 )
 
-func HandleCompilerRequest(msg *nats.Msg, nc *nats.Conn) {
+func HandleCompilerRequest(msg *nats.Msg, nc *nats.Conn, workerPool *executor.WorkerPool) {
 	var req model.ExecutionRequest
 	if err := json.Unmarshal(msg.Data, &req); err != nil {
 		log.Printf("Failed to parse execution request: %v", err)
 		return
 	}
 
-	compilerService := service.NewCompilerService()
+	compilerService := service.NewCompilerService(workerPool)
 
 	// Execute the code (mock function here)
 	res, err := compilerService.Compile(req.Code, req.Language)

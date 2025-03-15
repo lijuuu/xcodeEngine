@@ -2,10 +2,13 @@ package executor
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
+	"xcodeengine/model"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -166,26 +169,26 @@ func (cm *ContainerManager) StartContainer() error {
 		Tty:   true,
 	}
 
-// 	seccompProfile := `{
-//     "defaultAction": "SCMP_ACT_ERRNO",
-//     "architectures": ["SCMP_ARCH_X86_64"],
-//     "syscalls": [
-//         {
-//             "names": [
-//                 "fork", "vfork", "clone"
-//             ],
-//             "action": "SCMP_ACT_TRACE"
-//         }
-//     ]
-// }
-// `
+	// 	seccompProfile := `{
+	//     "defaultAction": "SCMP_ACT_ERRNO",
+	//     "architectures": ["SCMP_ARCH_X86_64"],
+	//     "syscalls": [
+	//         {
+	//             "names": [
+	//                 "fork", "vfork", "clone"
+	//             ],
+	//             "action": "SCMP_ACT_TRACE"
+	//         }
+	//     ]
+	// }
+	// `
 
 	hostConfig := &container.HostConfig{
 		Resources: container.Resources{
 			Memory:    200 * 1024 * 1024,
-			CPUShares: 256,
+			NanoCPUs:  500_000_000,
 			// PidsLimit: &[]int64{20}[0],
-			// Ulimits:   []*container.Ulimit{{Name: "nproc", Hard: 50, Soft: 50}},
+			// Ulimits:   []*container.Ulimit{{Name: "nproc", Hard: 70, Soft: 70}},
 		},
 		NetworkMode: "none",
 		// SecurityOpt: []string{"seccomp=" + seccompProfile},
@@ -227,9 +230,7 @@ func (cm *ContainerManager) RemoveContainer(containerID string) {
 		}).Error(color.RedString("Failed to remove container"))
 	}
 
-	cm.mu.Lock()
 	delete(cm.containers, containerID)
-	cm.mu.Unlock()
 	cm.logger.WithFields(logrus.Fields{
 		"container_id": containerID[:12],
 	}).Info(color.GreenString("Removed container"))
@@ -266,19 +267,26 @@ func (cm *ContainerManager) MonitorContainers(wg *sync.WaitGroup) {
 // checkHealth ensures container health and count
 func (cm *ContainerManager) checkHealth() {
 	ctx := context.Background()
-
 	containers, err := cm.dockerClient.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
 		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to list containers"))
 		return
 	}
 
+	cm.logger.WithFields(logrus.Fields{"count": len(containers)}).Debug("Checking container health")
+
 	runningWorkers := make(map[string]bool)
 	for _, c := range containers {
-		if c.Image == "worker" && c.State == "running" {
-			runningWorkers[c.ID] = true
+		if c.Image == "worker" {
+			if _, exists := cm.containers[c.ID]; exists {
+				if cm.containers[c.ID].State != StateError {
+					runningWorkers[c.ID] = true
+				}
+			}
 		}
 	}
+
+	// fmt.Print("length : ", len(containers), " workers : ", len(runningWorkers), " \n")
 
 	cm.mu.Lock()
 	var toRemove []string
@@ -372,4 +380,39 @@ func (cm *ContainerManager) ContainerCount() int {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 	return len(cm.containers)
+}
+
+func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
+	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
+	if err != nil {
+		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to inspect container"))
+		return false
+	}
+
+	var stats model.ContainerStats
+	data, _ := io.ReadAll(info.Body)
+	json.Unmarshal(data, &stats)
+
+	// Calculate CPU usage percentage
+	cpuDelta := float64(stats.CPUStats.CPUUsage.TotalUsage - stats.PreCPUStats.CPUUsage.TotalUsage)
+	systemDelta := float64(stats.CPUStats.SystemCPUUsage - stats.PreCPUStats.SystemCPUUsage)
+	cpuPercent := 0.0
+	if systemDelta > 0 && cpuDelta > 0 {
+		cpuPercent = (cpuDelta / systemDelta) * 100.0
+	}
+
+	// Calculate memory usage percentage
+	memoryPercent := (float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit)) * 100.0
+
+	// Check if either CPU or memory usage exceeds 70%
+	if cpuPercent > 70.0 || memoryPercent > 70.0 {
+		cm.logger.WithFields(logrus.Fields{
+			"container_id":   containerID[:12],
+			"cpu_percent":    fmt.Sprintf("%.2f%%", cpuPercent),
+			"memory_percent": fmt.Sprintf("%.2f%%", memoryPercent),
+		}).Info(color.MagentaString("Resource outsurge detected"))
+		return true
+	}
+
+	return false
 }

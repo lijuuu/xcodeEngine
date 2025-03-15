@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	logrus "github.com/sirupsen/logrus"
 )
 
@@ -45,29 +46,38 @@ func NewWorkerPool(maxWorkers, maxJobCount int) (*WorkerPool, error) {
 	pool.wg.Add(1)
 	go containerMgr.MonitorContainers(&pool.wg)
 
-	for i := 0; i < maxWorkers; i++ {
+	for i := 0; i < maxWorkers; i++ { // Fixed range loop to use index
 		pool.wg.Add(1)
 		go pool.worker(i + 1)
 	}
 
+	pool.logger.WithFields(logrus.Fields{
+		"maxWorkers": maxWorkers,
+	}).Info(color.GreenString("Initialized WorkerPool with %d workers", maxWorkers))
 	return pool, nil
 }
 
 // worker processes jobs from the queue
 func (p *WorkerPool) worker(id int) {
 	defer p.wg.Done()
-	p.logger.Printf("Worker %d started", id)
+	p.logger.WithFields(logrus.Fields{
+		"workerID": id,
+	}).Info(color.GreenString("Worker %d started", id))
 
 	for {
 		select {
 		case job, ok := <-p.jobs:
 			if !ok {
-				p.logger.Printf("Worker %d shutting down due to closed channel", id)
+				p.logger.WithFields(logrus.Fields{
+					"workerID": id,
+				}).Info(color.GreenString("Worker %d shutting down due to closed channel", id))
 				return
 			}
 			p.executeJob(id, job)
 		case <-p.shutdownChan:
-			p.logger.Printf("Worker %d received shutdown signal", id)
+			p.logger.WithFields(logrus.Fields{
+				"workerID": id,
+			}).Info(color.GreenString("Worker %d received shutdown signal", id))
 			return
 		}
 	}
@@ -77,12 +87,19 @@ func (p *WorkerPool) worker(id int) {
 func (p *WorkerPool) executeJob(workerID int, job Job) {
 	containerID, err := p.containerMgr.GetAvailableContainer()
 	if err != nil {
-		p.logger.Printf("Worker %d couldn't get container: %v", workerID, err)
+		p.logger.WithFields(logrus.Fields{
+			"workerID":    workerID,
+			"error":       err,
+			"containerID": "N/A",
+		}).Error(color.RedString("Worker %d couldn't get container: %v", workerID, err))
 		job.Result <- Result{Error: err}
 		return
 	}
 
-	p.logger.Printf("Worker %d executing in container %s", workerID, containerID[:12])
+	p.logger.WithFields(logrus.Fields{
+		"workerID":    workerID,
+		"containerID": containerID[:12],
+	}).Info(color.GreenString("Worker %d executing in container %s", workerID, containerID[:12]))
 	p.containerMgr.SetContainerState(containerID, StateBusy)
 
 	start := time.Now()
@@ -90,6 +107,23 @@ func (p *WorkerPool) executeJob(workerID int, job Job) {
 	duration := time.Since(start)
 
 	p.containerMgr.SetContainerState(containerID, StateIdle)
+	if err != nil {
+		p.logger.WithFields(logrus.Fields{
+			"workerID":    workerID,
+			"containerID": containerID[:12],
+			"language":    job.Language,
+			"duration":    duration,
+			"error":       err,
+		}).Warn(color.YellowString("Worker %d job failed in container %s: %v", workerID, containerID[:12], err))
+	} else {
+		p.logger.WithFields(logrus.Fields{
+			"workerID":    workerID,
+			"containerID": containerID[:12],
+			"language":    job.Language,
+			"duration":    duration,
+		}).Info(color.GreenString("Worker %d job completed in container %s (%dms)", workerID, containerID[:12], duration.Milliseconds()))
+	}
+
 	job.Result <- Result{
 		Output:        output,
 		Success:       success,
@@ -102,11 +136,49 @@ func (p *WorkerPool) executeJob(workerID int, job Job) {
 func (p *WorkerPool) executeCode(containerID, language, code string) (string, bool, error) {
 	config, ok := GetLanguageConfig(language)
 	if !ok {
+		p.logger.WithFields(logrus.Fields{
+			"containerID": containerID[:12],
+			"language":    language,
+		}).Error(color.RedString("Unsupported language %s in container %s", language, containerID[:12]))
 		return "", false, fmt.Errorf("unsupported language: %s", language)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), config.Timeout)
+	healthCheckCtx, healthCheckCancel := context.WithCancel(context.Background())
+	defer healthCheckCancel()
+
+	ctx, cancel := context.WithTimeout(healthCheckCtx, config.Timeout)
 	defer cancel()
+
+	go func() {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				p.logger.WithFields(logrus.Fields{
+					"containerID": containerID[:12],
+				}).Debug(color.GreenString("ctx done for container %s", containerID[:12]))
+				return
+			case <-healthCheckCtx.Done():
+				p.logger.WithFields(logrus.Fields{
+					"containerID": containerID[:12],
+				}).Debug(color.GreenString("healthCheckCtx done for container %s", containerID[:12]))
+				return
+			case <-ticker.C:
+				if p.containerMgr.CheckResourceOutsurge(containerID) {
+					p.logger.WithFields(logrus.Fields{
+						"containerID": containerID[:12],
+						"language":    language,
+					}).Warn(color.YellowString("Container %s is unhealthy, removing and replacing", containerID[:12]))
+					// p.containerMgr.RemoveContainer(containerID)
+					return
+					// healthCheckCancel()
+					// cancel()
+				}
+			}
+		}
+	}()
 
 	var output bytes.Buffer
 	cmd := exec.CommandContext(ctx, "docker", append([]string{"exec", containerID}, config.Args(code)...)...)
@@ -119,50 +191,59 @@ func (p *WorkerPool) executeCode(containerID, language, code string) (string, bo
 
 	if ctx.Err() == context.DeadlineExceeded {
 		p.logger.WithFields(logrus.Fields{
-			"container": containerID[:12],
-			"language":  language,
-			"duration":  duration,
-		}).Warn("Execution timeout, removing and replacing container")
-		p.containerMgr.RemoveContainer(containerID)
-		p.containerMgr.StartContainer()
+			"containerID": containerID[:12],
+			"language":    language,
+			"duration":    duration,
+			"error":			 err.Error(),
+		}).Warn(color.YellowString("Execution timeout for container %s, removing and replacing", containerID[:12]))
+		go p.containerMgr.RemoveContainer(containerID)
 		return "", false, fmt.Errorf("timeout after %v", config.Timeout)
 	}
 
 	if err != nil {
 		p.logger.WithFields(logrus.Fields{
-			"container": containerID[:12],
-			"language":  language,
-			"duration":  duration,
-			"error":     err,
-		}).Error("Execution failed")
+			"containerID": containerID[:12],
+			"language":    language,
+			"duration":    duration,
+			"error":       err,
+		}).Error(color.RedString("Execution error in container %s: %v", containerID[:12], err))
+		go p.containerMgr.RemoveContainer(containerID)
 		return output.String(), false, fmt.Errorf("execution error: %w", err)
 	}
 
 	p.logger.WithFields(logrus.Fields{
-		"container": containerID[:12],
-		"language":  language,
-		"duration":  duration,
-	}).Debug("Execution completed")
+		"containerID": containerID[:12],
+		"language":    language,
+		"duration":    duration,
+	}).Debug(color.GreenString("Execution completed in container %s", containerID[:12]))
 	return output.String(), true, nil
 }
 
 // ExecuteJob submits a job to the worker pool
 func (p *WorkerPool) ExecuteJob(language, code string) Result {
+	p.logger.WithFields(logrus.Fields{
+		"language": language,
+	}).Info(color.GreenString("Submitting job for %s", language))
+
 	result := make(chan Result, 1)
 	select {
 	case p.jobs <- Job{Language: language, Code: code, Result: result}:
 		return <-result
 	default:
+		p.logger.WithFields(logrus.Fields{
+			"language":    language,
+			"maxJobCount": p.maxJobCount,
+		}).Warn(color.YellowString("Job queue full, rejecting %s job (max: %d)", language, p.maxJobCount))
 		return Result{Error: fmt.Errorf("job queue full, max capacity: %d", p.maxJobCount)}
 	}
 }
 
 // Shutdown gracefully stops the worker pool
 func (p *WorkerPool) Shutdown() {
-	p.logger.Println("Shutting down worker pool...")
+	p.logger.Info(color.GreenString("Shutting down worker pool..."))
 	close(p.shutdownChan)
 	close(p.jobs)
 	p.containerMgr.Shutdown()
 	p.wg.Wait()
-	p.logger.Println("Worker pool shutdown complete")
+	p.logger.Info(color.GreenString("Worker pool shutdown complete"))
 }

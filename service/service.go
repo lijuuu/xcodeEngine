@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"time"
-	"xcodeengine/config"
 	"xcodeengine/executor"
 	"xcodeengine/internal"
 
@@ -29,10 +28,14 @@ type CompilerResponse struct {
 	ExecutionTime string `json:"execution_time,omitempty"`
 }
 
-type CompilerService struct{}
+type CompilerService struct {
+	WorkerPool *executor.WorkerPool
+}
 
-func NewCompilerService() *CompilerService {
-	return &CompilerService{}
+func NewCompilerService(workerPool *executor.WorkerPool) *CompilerService {
+	return &CompilerService{
+		WorkerPool: workerPool,
+	}
 }
 
 func (s *CompilerService) Compile(code string, language string) (*compilergrpc.CompileResponse, error) {
@@ -58,17 +61,8 @@ func (s *CompilerService) Compile(code string, language string) (*compilergrpc.C
 		}, nil
 	}
 
-	workerPool, err := executor.NewWorkerPool(config.LoadConfig().MaxWorkers, config.LoadConfig().JobCount)
-	if err != nil {
-		return &compilergrpc.CompileResponse{
-			Success:       false,
-			Error:         err.Error(),
-			StatusMessage: err.Error(),
-		}, nil
-	}
-
 	// Execute code using worker pool
-	result := workerPool.ExecuteJob(language, code)
+	result := s.WorkerPool.ExecuteJob(language, code)
 
 	if result.Error != nil {
 		return &compilergrpc.CompileResponse{
