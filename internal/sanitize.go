@@ -282,4 +282,4 @@ var DangerousPatterns = LanguagePatterns{
 			},
 		},
 	},
-}
+} 

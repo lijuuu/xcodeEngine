@@ -19,7 +19,7 @@ export default function () {
 
   // Test for Go code
   let startTime = new Date();
-  let goRes = http.post('http://localhost:8000/execute', JSON.stringify({
+  let goRes = http.post('http://localhost:7000/api/v1/compile', JSON.stringify({
     language: "go",
     code: b64encode("package main; import \"fmt\"; func main() { fmt.Println(\"Hello\") }")
   }), { headers: { "Content-Type": "application/json" } });
@@ -35,7 +35,7 @@ export default function () {
 
   // Test for C++ code
   startTime = new Date();
-  let cppRes = http.post('http://localhost:8000/execute', JSON.stringify({
+  let cppRes = http.post('http://localhost:7000/api/v1/compile', JSON.stringify({
     language: "cpp",
     code: b64encode("#include <iostream>\nint main() { std::cout << \"Hello from C++\" << std::endl; return 0; }")
   }), { headers: { "Content-Type": "application/json" } });
@@ -51,7 +51,7 @@ export default function () {
 
   // Test for Python code
   startTime = new Date();
-  let pythonRes = http.post('http://localhost:8000/execute', JSON.stringify({
+  let pythonRes = http.post('http://localhost:7000/api/v1/compile', JSON.stringify({
     language: "python",
     code: b64encode("print('Hello from Python')")
   }), { headers: { "Content-Type": "application/json" } });
@@ -67,7 +67,7 @@ export default function () {
 
   // Test for Node.js code
   startTime = new Date();
-  let nodeRes = http.post('http://localhost:8000/execute', JSON.stringify({
+  let nodeRes = http.post('http://localhost:7000/api/v1/compile', JSON.stringify({
     language: "js",
     code: b64encode("console.log('Hello from Node.js')")
   }), { headers: { "Content-Type": "application/json" } });

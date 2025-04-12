@@ -16,7 +16,7 @@ func main() {
 
 	config := config.LoadConfig()
 
-	workerPool, err := executor.NewWorkerPool(config.MaxWorkers, config.JobCount)
+	workerPool, _ := executor.NewWorkerPool(4, 3, 600, 1000) //worker, jobs,memory, vcpu (4,3,400,1000)
 
 	// Connect to NATS
 	nc, err := nats.Connect(config.NatsURL)
@@ -29,18 +29,19 @@ func main() {
 
 	// Subscribe to execution requests
 	nc.Subscribe("compiler.execute.request", func(msg *nats.Msg) {
-		logger.Info("Received execution request",
-			zap.String("subject", msg.Subject),
-			zap.String("reply", msg.Reply),
-			zap.String("data", string(msg.Data)))
-		natshandler.HandleCompilerRequest(msg, nc,workerPool)
+		// logger.Info("Received execution request",
+		// 	zap.String("subject", msg.Subject),
+		// 	zap.String("reply", msg.Reply),
+		// 	zap.String("data", string(msg.Data)))
+		natshandler.HandleCompilerRequest(msg, nc, workerPool)
 	})
 
-	nc.Subscribe("problems.execute.response", func(msg *nats.Msg) {
-		logger.Info("Received execution response",
-			zap.String("subject", msg.Subject),
-			zap.String("reply", msg.Reply),
-			zap.String("data", string(msg.Data)))
+	nc.Subscribe("problems.execute.request", func(msg *nats.Msg) {
+		// logger.Info("Received execution response",
+		// 	zap.String("subject", msg.Subject),
+		// 	zap.String("reply", msg.Reply),
+		// 	zap.String("data", string(msg.Data)))
+		natshandler.HandleProblemRunRequest(msg,nc,workerPool)
 	})
 
 	// Keep the service running

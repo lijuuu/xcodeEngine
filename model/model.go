@@ -1,18 +1,30 @@
 package model
 
 // ExecutionRequest represents the request structure for code execution
-type ExecutionRequest struct {
+type CompilerRequest struct {
 	Code     string `json:"code" binding:"required"`
 	Language string `json:"language" binding:"required"`
 }
 
 // ExecutionResponse represents the response structure for executed code
-type ExecutionResponse struct {
+type CompilerResponse struct {
 	Output        string `json:"output"`
 	Error         string `json:"error,omitempty"`
 	StatusMessage string `json:"status_message"`
 	Success       bool   `json:"success"`
 	ExecutionTime string `json:"execution_time,omitempty"`
+}
+type ProblemExecutionResponse struct {
+	Output        string `json:"output"`
+	Error         string `json:"error,omitempty"`
+	StatusMessage string `json:"status_message"`
+	Success       bool   `json:"success"`
+	ExecutionTime string `json:"execution_time,omitempty"`
+}
+
+type ProblemExecutionRequest struct {
+	Code     string `json:"code" binding:"required"`
+	Language string `json:"language" binding:"required"`
 }
 
 // ContainerStats represents the overall JSON structure.

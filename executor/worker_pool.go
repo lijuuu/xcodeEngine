@@ -24,8 +24,8 @@ type WorkerPool struct {
 }
 
 // NewWorkerPool initializes a new worker pool
-func NewWorkerPool(maxWorkers, maxJobCount int) (*WorkerPool, error) {
-	containerMgr, err := NewContainerManager(maxWorkers)
+func NewWorkerPool(maxWorkers, maxJobCount int,memorylimit,cpunanolimit int64) (*WorkerPool, error) {
+	containerMgr, err := NewContainerManager(maxWorkers,memorylimit,cpunanolimit)
 	if err != nil {
 		return nil, err
 	}
@@ -106,21 +106,20 @@ func (p *WorkerPool) executeJob(workerID int, job Job) {
 	output, success, err := p.executeCode(containerID, job.Language, job.Code)
 	duration := time.Since(start)
 
-	p.containerMgr.SetContainerState(containerID, StateIdle)
 	if err != nil {
 		p.logger.WithFields(logrus.Fields{
-			"workerID":    workerID,
 			"containerID": containerID[:12],
 			"language":    job.Language,
 			"duration":    duration,
-			"error":       err,
-		}).Warn(color.YellowString("Worker %d job failed in container %s: %v", workerID, containerID[:12], err))
+		}).Warn(color.YellowString("Worker %d job failed", workerID))
 	} else {
+		p.containerMgr.SetContainerState(containerID, StateIdle)
 		p.logger.WithFields(logrus.Fields{
 			"workerID":    workerID,
 			"containerID": containerID[:12],
 			"language":    job.Language,
 			"duration":    duration,
+			// "output":     output,
 		}).Info(color.GreenString("Worker %d job completed in container %s (%dms)", workerID, containerID[:12], duration.Milliseconds()))
 	}
 
@@ -167,11 +166,8 @@ func (p *WorkerPool) executeCode(containerID, language, code string) (string, bo
 				return
 			case <-ticker.C:
 				if p.containerMgr.CheckResourceOutsurge(containerID) {
-					p.logger.WithFields(logrus.Fields{
-						"containerID": containerID[:12],
-						"language":    language,
-					}).Warn(color.YellowString("Container %s is unhealthy, removing and replacing", containerID[:12]))
-					// p.containerMgr.RemoveContainer(containerID)
+					go p.containerMgr.RemoveContainer(containerID)
+					cancel()
 					return
 					// healthCheckCancel()
 					// cancel()
@@ -189,25 +185,12 @@ func (p *WorkerPool) executeCode(containerID, language, code string) (string, bo
 	err := cmd.Run()
 	duration := time.Since(start)
 
-	if ctx.Err() == context.DeadlineExceeded {
-		p.logger.WithFields(logrus.Fields{
-			"containerID": containerID[:12],
-			"language":    language,
-			"duration":    duration,
-			"error":			 err.Error(),
-		}).Warn(color.YellowString("Execution timeout for container %s, removing and replacing", containerID[:12]))
-		go p.containerMgr.RemoveContainer(containerID)
-		return "", false, fmt.Errorf("timeout after %v", config.Timeout)
-	}
-
 	if err != nil {
 		p.logger.WithFields(logrus.Fields{
 			"containerID": containerID[:12],
 			"language":    language,
 			"duration":    duration,
-			"error":       err,
-		}).Error(color.RedString("Execution error in container %s: %v", containerID[:12], err))
-		go p.containerMgr.RemoveContainer(containerID)
+		}).Error(color.RedString("Execution error in container: %v",err))
 		return output.String(), false, fmt.Errorf("execution error: %w", err)
 	}
 
