@@ -1,0 +1,60 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.1'
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Build binary
+        run: go build -o codeexecutionengine ./cmd
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t lijuthomas/codeexecutionengine:${{ github.sha }} -t lijuthomas/codeexecutionengine:latest .
+          docker push lijuthomas/codeexecutionengine:${{ github.sha }}
+          docker push lijuthomas/codeexecutionengine:latest
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "$SSH_KEY" > ssh_key.pem
+          chmod 600 ssh_key.pem
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << EOF
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            docker stop codeexecutionengine || true
+            docker rm codeexecutionengine || true
+            docker pull lijuthomas/codeexecutionengine:latest
+            docker run -d --name codeexecutionengine -p 50053:50053 \
+              -e CODEEXECUTION_NATS_URL=nats://localhost:4222 \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              lijuthomas/codeexecutionengine:latest
+          EOF
