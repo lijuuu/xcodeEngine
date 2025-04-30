@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"os/exec"
 	"sync"
 	"time"
@@ -39,6 +40,7 @@ func NewWorkerPool(maxWorkers, maxJobCount int,memorylimit,cpunanolimit int64) (
 		shutdownChan: make(chan struct{}),
 	}
 
+	log.Print("Initializing pool")
 	if err := containerMgr.InitializePool(); err != nil {
 		return nil, err
 	}
