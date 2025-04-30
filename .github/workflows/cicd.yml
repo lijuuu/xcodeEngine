@@ -71,7 +71,7 @@ jobs:
         run: |
           printf "%s" "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
-          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
+          scp -o StrictHostKeyChecking=no -i ssh_key. codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST '
             sudo systemctl stop engine.service || true &&
             sudo mv /tmp/codeexecutionengine /usr/local/bin/engine &&
@@ -141,7 +141,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.27.0
         with:
           slack-bot-token: ${{ secrets.SLACK_WEBHOOK_URL }}
-          channel-id: 'ci-cd-notifications'  # Replace with your Slack channel name
+          channel-id: 'ci-cd-notifications'  
           payload: |
             {
               "blocks": [
