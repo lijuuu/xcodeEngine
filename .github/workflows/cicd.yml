@@ -21,7 +21,7 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 go build -o codeexecutionengine ./cmd/main.go
 
-      - name: Upload binary and restart systemd service on EC2
+      - name: Upload binary and restart engine service on EC2
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
@@ -32,31 +32,8 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
 
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
+            sudo systemctl stop engine.service || true
             sudo mv /tmp/codeexecutionengine /usr/local/bin/engine
             sudo chmod +x /usr/local/bin/engine
-
-            # create service only if not exists
-            if [ ! -f /etc/systemd/system/engine.service ]; then
-              echo "Creating engine.service..."
-              sudo tee /etc/systemd/system/engine.service > /dev/null <<EOL
-              [Unit]
-              Description=Engine Service
-              After=network.target
-
-              [Service]
-              ExecStart=/usr/local/bin/engine
-              WorkingDirectory=/home/ubuntu
-              Restart=always
-              User=ubuntu
-              Group=ubuntu
-
-              [Install]
-              WantedBy=multi-user.target
-              EOL
-              sudo systemctl daemon-reexec
-              sudo systemctl daemon-reload
-              sudo systemctl enable engine.service
-            fi
-
             sudo systemctl restart engine.service
           EOF
