@@ -64,6 +64,8 @@ jobs:
             docker stop codeexecutionengine || true
             docker rm codeexecutionengine || true
 
+            docker pull lijuthomas/worker:latest
+
             # Pull the latest Docker image
             docker pull lijuthomas/codeexecutionengine:latest
 
