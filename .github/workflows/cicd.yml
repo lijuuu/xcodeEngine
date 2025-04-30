@@ -9,63 +9,182 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Notify Slack – Deployment Started
       - name: Notify Slack – Deployment Started
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v1.27.0
         with:
+          slack-bot-token: ${{ secrets.SLACK_WEBHOOK_URL }}
+          channel-id: 'ci-cd-notifications'  # Replace with your Slack channel name
           payload: |
             {
-              "text": ":rocket: Deployment started for *${{ github.repository }}* on branch *${{ github.ref_name }}*."
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":rocket: *Deployment Started* for *${{ github.repository }}* on branch *${{ github.ref_name }}*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Committer:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run ID:*\n${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOKS
 
+      # Step 2: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 3: Set up Go
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.21"
 
+      # Step 4: Build binary
       - name: Build binary
         run: |
           GOOS=linux GOARCH=amd64 go build -o codeexecutionengine ./cmd/main.go
 
-      - name: Upload binary and restart engine service on EC2
+      # Step 5: Upload binary and restart engine service on EC2
+      - name: Deploy to EC2
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
         run: |
-          echo "$SSH_KEY" > ssh_key.pem
+          printf "%s" "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST '
+            sudo systemctl stop engine.service || true &&
+            sudo mv /tmp/codeexecutionengine /usr/local/bin/engine &&
+            sudo chmod +x /usr/local/bin/engine &&
+            sudo systemctl restart engine.service &&
+            sudo systemctl status engine.service
+          '
+          rm -f ssh_key.pem
 
-          scp -o StrictHostKeyChecking=no -i ssh_key. codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
-
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
-            sudo systemctl stop engine.service || true
-            sudo mv /tmp/codeexecutionengine /usr/local/bin/engine
-            sudo chmod +x /usr/local/bin/engine
-            sudo systemctl restart engine.service
-          EOF
-
+      # Step 6: Notify Slack – Deployment Successful
       - name: Notify Slack – Deployment Successful
         if: success()
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v1.27.0
         with:
+          slack-bot-token: ${{ secrets.SLACK_WEBHOOK_URL }}
+          channel-id: 'ci-cd-notifications'  # Replace with your Slack channel name
           payload: |
             {
-              "text": ":white_check_mark: Deployment succeeded for *${{ github.repository }}* on branch *${{ github.ref_name }}*."
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Deployment Succeeded* for *${{ github.repository }}* on branch *${{ github.ref_name }}*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Committer:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run ID:*\n${{ github.run_id }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Run",
+                        "emoji": true
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOKS
 
+      # Step 7: Notify Slack – Deployment Failed
       - name: Notify Slack – Deployment Failed
         if: failure()
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v1.27.0
         with:
+          slack-bot-token: ${{ secrets.SLACK_WEBHOOK_URL }}
+          channel-id: 'ci-cd-notifications'  # Replace with your Slack channel name
           payload: |
             {
-              "text": ":x: Deployment failed for *${{ github.repository }}* on branch *${{ github.ref_name }}*. Check logs for more details."
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Deployment Failed* for *${{ github.repository }}* on branch *${{ github.ref_name }}*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Committer:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run ID:*\n${{ github.run_id }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Run",
+                        "emoji": true
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOKS
