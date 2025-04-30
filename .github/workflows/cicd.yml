@@ -9,6 +9,16 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Notify Slack – Deployment Started
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": ":rocket: Deployment started for *${{ github.repository }}* on branch *${{ github.ref_name }}*."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -37,3 +47,25 @@ jobs:
             sudo chmod +x /usr/local/bin/engine
             sudo systemctl restart engine.service
           EOF
+
+      - name: Notify Slack – Deployment Successful
+        if: success()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": ":white_check_mark: Deployment succeeded for *${{ github.repository }}* on branch *${{ github.ref_name }}*."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack – Deployment Failed
+        if: failure()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          payload: |
+            {
+              "text": ":x: Deployment failed for *${{ github.repository }}* on branch *${{ github.ref_name }}*. Check logs for more details."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
