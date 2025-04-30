@@ -69,8 +69,21 @@ jobs:
 
             # Run the Docker container with required environment variables
             docker run -d --name codeexecutionengine -p 50053:50053 \
-              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v /home/ubuntu/.env:/app/.env \
               lijuthomas/codeexecutionengine:latest
             sleep 5
             docker logs codeexecutionengine
+          EOF
+
+ # Step 9: Prune unused Docker images, containers, and networks
+      - name: Prune unused Docker images, containers, and networks
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
+        run: |
+          echo "$SSH_KEY" > ssh_key.pem
+          chmod 600 ssh_key.pem
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << EOF
+            # Clean up unused Docker containers, images, and networks
+            docker system prune -af --volumes
           EOF

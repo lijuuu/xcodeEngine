@@ -25,7 +25,7 @@ func LoadConfig() Config {
 	}
 
 	return Config{
-		MaxWorkers:     getEnvInt("MAX_WORKERS", 3),
+		MaxWorkers:     getEnvInt("MAX_WORKERS", 2),
 		JobCount:       getEnvInt("JOB_COUNT", 1),
 		// URL:            getEnv("URL", "http://localhost:8000"),
 		Ratelimit:      getEnvInt("RATE_LIMIT", 10),
