@@ -19,71 +19,44 @@ jobs:
 
       - name: Build binary
         run: |
-          GOOS=linux GOARCH=amd64 go build -o engine ./cmd/main.go
+          GOOS=linux GOARCH=amd64 go build -o codeexecutionengine ./cmd/main.go
 
-      - name: Check if engine binary exists and remove if necessary
+      - name: Upload binary and restart systemd service on EC2
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
         run: |
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
+
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
 
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
-            if [ -f /home/ubuntu/engine ]; then
-              echo "File already exists, removing it..."
-              rm /home/ubuntu/engine
-            fi
-          EOF
+            sudo mv /tmp/codeexecutionengine /usr/local/bin/engine
+            sudo chmod +x /usr/local/bin/engine
 
-      - name: Upload binary to EC2
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
-        run: |
-          echo "$SSH_KEY" > ssh_key.pem
-          chmod 600 ssh_key.pem
-
-          scp -o StrictHostKeyChecking=no -i ssh_key.pem engine ubuntu@$EC2_HOST:/home/ubuntu/engine
-
-      - name: Set up the service (systemctl) and restart the service on EC2
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
-        run: |
-          echo "$SSH_KEY" > ssh_key.pem
-          chmod 600 ssh_key.pem
-
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
-            # Create a systemd service file if it doesn't exist
+            # create service only if not exists
             if [ ! -f /etc/systemd/system/engine.service ]; then
-              echo "[Unit]
+              echo "Creating engine.service..."
+              sudo tee /etc/systemd/system/engine.service > /dev/null <<EOL
+              [Unit]
               Description=Engine Service
               After=network.target
 
               [Service]
-              ExecStart=/home/ubuntu/engine
+              ExecStart=/usr/local/bin/engine
               WorkingDirectory=/home/ubuntu
               Restart=always
               User=ubuntu
               Group=ubuntu
 
               [Install]
-              WantedBy=multi-user.target" > /etc/systemd/system/engine.service
+              WantedBy=multi-user.target
+              EOL
+              sudo systemctl daemon-reexec
+              sudo systemctl daemon-reload
+              sudo systemctl enable engine.service
             fi
 
-            # Reload systemd to recognize the new or updated service file
-            sudo systemctl daemon-reload
-
-            # Stop and disable any existing instance of the service
-            sudo systemctl stop engine || true
-            sudo systemctl disable engine || true
-
-            # Replace the binary with the new one
-            sudo cp /home/ubuntu/engine /usr/local/bin/engine
-            sudo chmod +x /usr/local/bin/engine
-
-            # Enable and start the service
-            sudo systemctl enable engine
-            sudo systemctl start engine
+            sudo systemctl restart engine.service
           EOF
