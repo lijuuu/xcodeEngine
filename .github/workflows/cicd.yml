@@ -21,6 +21,23 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 go build -o codeexecutionengine ./cmd/main.go
 
+          
+      - name: Check if codeexecutionengine exists and remove if necessary
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
+        run: |
+          echo "$SSH_KEY" > ssh_key.pem
+          chmod 600 ssh_key.pem
+
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
+            if [ -f /home/ubuntu/codeexecutionengine ]; then
+              echo "File already exists, removing it..."
+              rm /home/ubuntu/codeexecutionengine
+            fi
+          EOF
+
+
       - name: Upload binary to EC2
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -44,16 +61,3 @@ jobs:
             chmod +x /home/ubuntu/codeexecutionengine
             nohup /home/ubuntu/codeexecutionengine > engine.log 2>&1 &
           EOF
-
-      - name: Restart service on EC2
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
-        run: |
-          echo "$SSH_KEY" > ssh_key.pem
-          chmod 600 ssh_key.pem
-
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << EOF
-            docker pull lijuthomas/worker:latest
-          EOF
-
