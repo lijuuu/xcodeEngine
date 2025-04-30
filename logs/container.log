@@ -252,3 +252,12 @@
 [36mINFO[0m[2025-04-30T15:12:51+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=d7b7185f6f6f [36mstate[0m=busy
 [36mINFO[0m[2025-04-30T15:12:51+05:30] [32mUpdated container state[0m              [36mcontainer_id[0m=d7b7185f6f6f [36mstate[0m=idle
 [36mINFO[0m[2025-04-30T15:12:51+05:30] [32mWorker 2 job completed in container d7b7185f6f6f (144ms)[0m  [36mcontainerID[0m=d7b7185f6f6f [36mduration[0m=144.652869ms [36mlanguage[0m=python [36mworkerID[0m=2
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=16944669ebce [36mstate[0m=idle
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=d7b7185f6f6f [36mstate[0m=idle
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=48c30426da12 [36mstate[0m=idle
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=e784899ca61e [36mstate[0m=idle
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mInitialized WorkerPool with 4 workers[0m  [36mmaxWorkers[0m=4
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mWorker 2 started[0m                     [36mworkerID[0m=2
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mWorker 1 started[0m                     [36mworkerID[0m=1
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mWorker 4 started[0m                     [36mworkerID[0m=4
+[36mINFO[0m[2025-04-30T15:29:54+05:30] [32mWorker 3 started[0m                     [36mworkerID[0m=3

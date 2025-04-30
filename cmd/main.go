@@ -52,6 +52,7 @@ func main() {
 
 // checkIfDockerImageExists checks if a Docker image exists locally
 func checkIfDockerImageExists(imageName string) bool {
+	printAllWorkerImages() // print all workers before checking
 	cmd := exec.Command("docker", "images", "-q", imageName)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -59,4 +60,21 @@ func checkIfDockerImageExists(imageName string) bool {
 		return false
 	}
 	return strings.TrimSpace(string(output)) != ""
+}
+
+// printAllWorkerImages prints all existing images with 'worker' in the name
+func printAllWorkerImages() {
+	log.Println("Listing all local Docker images containing 'worker':")
+	cmd := exec.Command("docker", "images")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Println("Error listing Docker images:", err)
+		return
+	}
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "worker") {
+			log.Println(line)
+		}
+	}
 }
