@@ -72,6 +72,8 @@ jobs:
             # Run the Docker container with required environment variables
             docker run -d --name codeexecutionengine -p 50053:50053 \
               -v /home/ubuntu/.env:/app/.env \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v /usr/bin/docker:/usr/bin/docker \
               lijuthomas/codeexecutionengine:latest
             sleep 10
             docker logs codeexecutionengine
