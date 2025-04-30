@@ -39,7 +39,7 @@ jobs:
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
 
-          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
+          scp -o StrictHostKeyChecking=no -i ssh_key. codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
 
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
             sudo systemctl stop engine.service || true
