@@ -22,6 +22,10 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 go build -o codeexecutionengine ./cmd/main.go
 
+      - name: Check codeexecutionengine location
+        run: |
+          ls -l
+
       - name: Upload binary to EC2
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
