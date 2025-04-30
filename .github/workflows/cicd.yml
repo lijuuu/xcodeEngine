@@ -30,9 +30,10 @@ jobs:
       - name: Run go vet
         run: go vet ./...
 
-      # Step 5: Build the Go binary
-      - name: Build binary
-        run: go build -o codeexecutionengine ./cmd
+      # Step 5: Build the Go binary using multi-stage Dockerfile
+      - name: Build Docker Image
+        run: |
+          docker build -t lijuthomas/codeexecutionengine:${{ github.sha }} -t lijuthomas/codeexecutionengine:latest .
 
       # Step 6: Log in to Docker Hub
       - name: Log in to Docker Hub
@@ -41,10 +42,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Step 7: Build and push Docker image
-      - name: Build and push Docker image
+      # Step 7: Push Docker Image to Docker Hub
+      - name: Push Docker Image
         run: |
-          docker build -t lijuthomas/codeexecutionengine:${{ github.sha }} -t lijuthomas/codeexecutionengine:latest .
           docker push lijuthomas/codeexecutionengine:${{ github.sha }}
           docker push lijuthomas/codeexecutionengine:latest
 
@@ -71,11 +71,11 @@ jobs:
             docker run -d --name codeexecutionengine -p 50053:50053 \
               -v /home/ubuntu/.env:/app/.env \
               lijuthomas/codeexecutionengine:latest
-            sleep 5
+            sleep 10
             docker logs codeexecutionengine
           EOF
 
- # Step 9: Prune unused Docker images, containers, and networks
+      # Step 9: Prune unused Docker images, containers, and networks
       - name: Prune unused Docker images, containers, and networks
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}

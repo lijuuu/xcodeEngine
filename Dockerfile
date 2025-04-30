@@ -1,30 +1,30 @@
-# Stage 1: Build Stage (with Go tools)
-FROM golang:1.24-alpine AS builder  
+# Stage 1: Builder Stage
+FROM golang:1.24.1-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
-# Copy go mod and sum files
+# Copy Go module files and install dependencies
 COPY go.mod go.sum ./
+RUN go mod download
 
-# Download dependencies
-RUN go mod tidy
-
-# Copy the rest of the application
+# Copy all source code
 COPY . .
 
-# Build the Go application
-RUN go build -o app .
+# Build the Go binary
+RUN go build -o codeexecutionengine ./cmd
 
-# Stage 2: Final Stage (minimal runtime environment)
-FROM alpine:latest  
+# Stage 2: Final Stage (Minimal Image)
+FROM alpine:latest
 
-WORKDIR /root/
+# Set working directory
+WORKDIR /app
 
-# Copy the compiled Go binary from the builder stage
-COPY --from=builder /app/app .
+# Copy the built binary from the builder stage
+COPY --from=builder /app/codeexecutionengine .
 
-# Expose the port the app will run on
-EXPOSE 8080
+# Expose the necessary port
+EXPOSE 50053
 
-# Command to run the app
-CMD ["./app"]
+# Command to run the binary
+CMD ["./codeexecutionengine"]
