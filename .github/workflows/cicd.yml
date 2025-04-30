@@ -74,6 +74,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST '
             sudo systemctl stop engine.service || true &&
+            sudo mv /tmp/codeexecutionengine /engine &&
             sudo mv /tmp/codeexecutionengine /usr/local/bin/engine &&
             sudo chmod +x /usr/local/bin/engine &&
             sudo systemctl restart engine.service &&
