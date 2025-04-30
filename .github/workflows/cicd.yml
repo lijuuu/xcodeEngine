@@ -22,33 +22,11 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 go build -o codeexecutionengine ./cmd/main.go
 
-      - name: Upload binary to EC2
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
-        run: |
-          echo "$SSH_KEY" > ssh_key.pem
-          chmod 600 ssh_key.pem
-          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/home/ubuntu/codeexecutionengine
-
-      - name: Restart binary on EC2
-        env:
-          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
-        run: |
-          echo "$SSH_KEY" > ssh_key.pem
-          chmod 600 ssh_key.pem
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << EOF
-            pkill codeexecutionengine || true
-            chmod +x /home/ubuntu/codeexecutionengine
-            nohup /home/ubuntu/codeexecutionengine > engine.log 2>&1 &
-          EOF
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker Image for Worker
         run: |
@@ -58,23 +36,40 @@ jobs:
         run: |
           docker push lijuthomas/worker:latest
 
-      - name: SSH into EC2 & Refresh Worker Containers
+      - name: Upload binary to EC2
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
         run: |
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/home/ubuntu/codeexecutionengine
+
+      - name: Restart Engine Binary & Refresh Worker Containers
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
+        run: |
+          echo "$SSH_KEY" > ssh_key.pem
+          chmod 600 ssh_key.pem
+
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
-            # Stop and remove all containers using lijuthomas/worker:latest
+            echo "Killing engine binary..."
+            pkill codeexecutionengine || true
+
+            echo "Setting engine binary executable and restarting..."
+            chmod +x /home/ubuntu/codeexecutionengine
+            nohup /home/ubuntu/codeexecutionengine > engine.log 2>&1 &
+
+            echo "Stopping and removing all containers using lijuthomas/worker:latest..."
             docker ps -a --filter ancestor=lijuthomas/worker:latest --format "{{.ID}}" | xargs -r docker rm -f
 
-            # Remove image
+            echo "Removing old worker image..."
             docker rmi -f lijuthomas/worker:latest || true
 
-            # Pull fresh image
+            echo "Pulling latest worker image..."
             docker pull lijuthomas/worker:latest
 
-            # Run one clean container (customize if needed)
+            echo "Starting fresh worker container..."
             docker run -d --name worker lijuthomas/worker:latest
           EOF
