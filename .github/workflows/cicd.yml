@@ -39,9 +39,8 @@ jobs:
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
 
-          docker pull lijuthomas/worker:latest
-
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << EOF
+            docker pull lijuthomas/worker:latest
             pkill codeexecutionengine || true
             chmod +x /home/ubuntu/codeexecutionengine
             nohup /home/ubuntu/codeexecutionengine > engine.log 2>&1 &
