@@ -69,6 +69,9 @@ jobs:
             # Pull the latest Docker image
             docker pull lijuthomas/codeexecutionengine:latest
 
+            sleep 1
+            docker images
+
             # Run the Docker container with required environment variables
             docker run -d --name codeexecutionengine -p 50053:50053 \
               -v /home/ubuntu/.env:/app/.env \
