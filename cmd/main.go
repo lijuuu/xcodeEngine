@@ -19,6 +19,8 @@ func main() {
 	// Load configuration
 	config := config.LoadConfig()
 
+	log.Println("Prepping Code Execution engine")
+
 	// Check if the worker image exists
 	imageName := "lijuthomas/worker:latest" 
 	if !checkIfDockerImageExists(imageName) {
