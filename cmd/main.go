@@ -20,7 +20,7 @@ func main() {
 	config := config.LoadConfig()
 
 	// Check if the worker image exists
-	imageName := "lijuthomas/worker:latest" 
+	imageName := "lijuthomas/worker" 
 	if !checkIfDockerImageExists(imageName) {
 		logger.Fatal("Worker Docker image not found. Exiting...")
 	}
