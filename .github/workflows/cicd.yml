@@ -43,7 +43,7 @@ jobs:
         run: |
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
-          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/home/ubuntu/codeexecutionengine
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_SERVER_IP:/home/ubuntu/codeexecutionengine
 
       - name: Restart Engine Binary & Refresh Worker Containers
         env:
@@ -53,7 +53,7 @@ jobs:
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
 
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_SERVER_IP << 'EOF'
             echo "Killing engine binary..."
             pkill codeexecutionengine || true
 
