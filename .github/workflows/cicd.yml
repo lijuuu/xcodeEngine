@@ -54,22 +54,15 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          echo "$SSH_KEY" > key.pem
+          printf "%s" "$SSH_KEY" > key.pem
           chmod 600 key.pem
-          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << 'EOF'
-            # Log in to Docker Hub on EC2
-            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-
-            # Stop and remove any existing container
-            docker stop codeexecutionengine || true
-            docker rm codeexecutionengine || true
-
-            # Pull the latest Docker image
-            docker pull lijuthomas/codeexecutionengine:latest
-
-            # Run the Docker container with required environment variables
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin &&
+            docker stop codeexecutionengine || true &&
+            docker rm codeexecutionengine || true &&
+            docker pull lijuthomas/codeexecutionengine:latest &&
             docker run -d --name codeexecutionengine -p 50053:50053 \
               -v /var/run/docker.sock:/var/run/docker.sock \
               lijuthomas/codeexecutionengine:latest
-          EOF
+          '
           rm -f key.pem
