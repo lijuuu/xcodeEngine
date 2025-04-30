@@ -78,8 +78,9 @@ jobs:
               -v /var/run/docker.sock:/var/run/docker.sock \
               -v /usr/bin/docker:/usr/bin/docker \
               lijuthomas/codeexecutionengine:latest
-            sleep 10
-            docker logs codeexecutionengine
+            docker inspect codeexecutionengine
+            # sleep 10
+            # docker logs codeexecutionengine
           EOF
 
       # Step 9: Prune unused Docker images, containers, and networks
