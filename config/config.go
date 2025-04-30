@@ -11,8 +11,7 @@ import (
 type Config struct {
 	MaxWorkers     int
 	JobCount       int
-	URL            string
-	TogetherAPIKey string
+	// URL            string
 	Ratelimit      int
 	RatelimitBurst int
 	Port           string
@@ -20,18 +19,17 @@ type Config struct {
 }
 
 func LoadConfig() Config {
-	err := godotenv.Load(".env.production")
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Printf("Warning: Error loading .env.production file: %v", err)
+		log.Printf("Warning: Error loading .env file: %v", err)
 	}
 
 	return Config{
 		MaxWorkers:     getEnvInt("MAX_WORKERS", 3),
 		JobCount:       getEnvInt("JOB_COUNT", 1),
-		URL:            getEnv("URL", "http://localhost:8000"),
+		// URL:            getEnv("URL", "http://localhost:8000"),
 		Ratelimit:      getEnvInt("RATE_LIMIT", 10),
 		RatelimitBurst: getEnvInt("RATE_LIMIT_BURST", 20),
-		TogetherAPIKey: getEnv("TOGETHER_API_KEY", ""),
 		Port:           getEnv("PORT", "8000"),
 		NatsURL:        getEnv("NATSURL", "nats://localhost:4222"),
 	}
