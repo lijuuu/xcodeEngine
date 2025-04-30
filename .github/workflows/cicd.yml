@@ -1,4 +1,4 @@
-name: Simple Binary Deploy
+name: Simple Binary & Worker Deploy
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,10 +29,9 @@ jobs:
         run: |
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
-
           scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/home/ubuntu/codeexecutionengine
 
-      - name: Restart service on EC2
+      - name: Restart binary and refresh worker on EC2
         env:
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
@@ -39,9 +39,15 @@ jobs:
           echo "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
 
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << EOF
-            docker pull lijuthomas/worker:latest
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << 'EOF'
+            echo "Restarting codeexecutionengine..."
             pkill codeexecutionengine || true
             chmod +x /home/ubuntu/codeexecutionengine
             nohup /home/ubuntu/codeexecutionengine > engine.log 2>&1 &
+
+            echo "Refreshing lijuthomas/worker:latest container..."
+            docker ps -a --filter ancestor=lijuthomas/worker:latest --format "{{.ID}}" | xargs -r docker rm -f
+            docker rmi -f lijuthomas/worker:latest || true
+            docker pull lijuthomas/worker:latest
+            docker run -d --name worker lijuthomas/worker:latest
           EOF
