@@ -2,8 +2,6 @@ module xcodeengine
 
 go 1.24
 
-toolchain go1.24.1
-
 require (
 	github.com/docker/docker v27.5.1+incompatible
 	github.com/fatih/color v1.18.0
