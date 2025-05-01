@@ -130,8 +130,9 @@ func (p *WorkerPool) executeJob(workerID int, job Job) {
 
 	p.containerMgr.SetContainerState(containerID, StateIdle)
 
+	truncatedOutput := output
 	if len(output) > 20 {
-		output = output[:20] + "..."
+		truncatedOutput = output[:20] + "..."
 	}
 
 	if err != nil {
@@ -139,7 +140,7 @@ func (p *WorkerPool) executeJob(workerID int, job Job) {
 			"workerID":    workerID,
 			"containerID": containerID[:12],
 			"duration":    duration,
-			"output":      output,
+			"output":      truncatedOutput,
 			"error":       err,
 		}).Warn(color.YellowString("Worker %d job failed", workerID))
 	} else {
@@ -147,7 +148,7 @@ func (p *WorkerPool) executeJob(workerID int, job Job) {
 			"workerID":    workerID,
 			"containerID": containerID[:12],
 			"duration":    duration,
-			"output":      output,
+			"output":      truncatedOutput,
 		}).Info(color.GreenString("Worker %d job completed in container %s (%dms)", workerID, containerID[:12], duration.Milliseconds()))
 	}
 
