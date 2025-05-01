@@ -59,7 +59,10 @@ type ContainerManager struct {
 
 // NewContainerManager creates a new container manager
 func NewContainerManager(maxWorkers int, memorylimit, cpunanolimit int64) (*ContainerManager, error) {
-	dockerClient, err := client.NewClientWithOpts()
+	dockerClient, err := client.NewClientWithOpts(
+		client.FromEnv,
+		client.WithVersion("1.45"),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %v", err)
 	}
