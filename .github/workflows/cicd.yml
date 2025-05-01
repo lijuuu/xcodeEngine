@@ -61,7 +61,7 @@ jobs:
       # Step 4: Build binary
       - name: Build binary
         run: |
-          GOOS=linux GOARCH=amd64 go build -o codeexecutionengine ./cmd/main.go
+          GOOS=linux GOARCH=amd64 go build -o engine ./cmd/main.go
 
       # Step 5: Upload binary and restart engine service on EC2
       - name: Deploy to EC2
@@ -71,31 +71,38 @@ jobs:
         run: |
           printf "%s" "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
-          scp -o StrictHostKeyChecking=no -i ssh_key.pem codeexecutionengine ubuntu@$EC2_HOST:/tmp/codeexecutionengine
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem engine ubuntu@$EC2_HOST:/tmp/engine
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST '
             # Create log directory and set permissions
             sudo mkdir -p /var/log/engine &&
             sudo chown ubuntu:ubuntu /var/log/engine &&
             sudo chmod 755 /var/log/engine &&
 
-            # Copy .env to binary location
+            # Copy .env to binary location and home dir
             sudo cp /home/ubuntu/.env /usr/local/bin/.env &&
+            sudo cp /home/ubuntu/.env /home/ubuntu/.env &&
             sudo chown ubuntu:ubuntu /usr/local/bin/.env &&
+            sudo chown ubuntu:ubuntu /home/ubuntu/.env &&
 
-            # Deploy binary
+            # Deploy binary to /usr/local/bin
             sudo systemctl stop engine.service || true &&
-            sudo mv /tmp/codeexecutionengine /usr/local/bin/engine &&
+            sudo mv /tmp/engine /usr/local/bin/engine &&
             sudo chmod +x /usr/local/bin/engine &&
             sudo chown ubuntu:ubuntu /usr/local/bin/engine &&
 
+            # Also copy binary to /home/ubuntu
+            sudo cp /usr/local/bin/engine /home/ubuntu/engine &&
+            sudo chown ubuntu:ubuntu /home/ubuntu/engine &&
+
             # Restart service
             sudo systemctl restart engine.service &&
-            sudo systemctl status engine.service
+            sudo systemctl status engine.service &&
 
             # Prune Docker system
             yes | sudo docker system prune
           '
           rm -f ssh_key.pem
+
 
       # Step 6: Notify Slack – Deployment Successful
       - name: Notify Slack – Deployment Successful
