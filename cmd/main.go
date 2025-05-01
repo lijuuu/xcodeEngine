@@ -17,21 +17,31 @@ func main() {
 	defer logger.Sync()
 
 	// Load configuration
+	log.Println("Loading engine configuration...")
 	config := config.LoadConfig()
+	log.Printf("Loaded config: %+v\n", config)
 
 	log.Println("Prepping Code Execution engine")
 
 	// Check if the worker image exists
-	imageName := "lijuthomas/worker:latest" 
+	imageName := "lijuthomas/worker"
+	log.Printf("Checking if Docker image '%s' exists locally...", imageName)
 	if !checkIfDockerImageExists(imageName) {
-		logger.Fatal("Worker Docker image not found. Exiting...")
+		logger.Fatal("Worker Docker image not found. Exiting...",
+			zap.String("image", imageName))
 	}
+	log.Printf("Docker image '%s' found.", imageName)
 
-	log.Println("Starting worker pool init")
-	// Initialize worker pool
-	workerPool, _ := executor.NewWorkerPool(2, 3, 600, 1000) //worker, jobs, memory, vcpu (4,3,400,1000)
+	log.Println("Starting worker pool initialization")
+	workerPool, err := executor.NewWorkerPool(2, 3, 600, 1000) //workers, jobs, memory, vcpu
+	if err != nil {
+		logger.Fatal("Failed to initialize worker pool",
+			zap.Error(err))
+	}
+	log.Println("Worker pool initialized successfully")
 
 	// Connect to NATS
+	log.Printf("Connecting to NATS at: %s", config.NatsURL)
 	nc, err := nats.Connect(config.NatsURL)
 	if err != nil {
 		logger.Fatal("Failed to connect to NATS",
@@ -39,17 +49,30 @@ func main() {
 			zap.Error(err))
 	}
 	defer nc.Close()
-
-	log.Println("connected to nats")
+	log.Println("Successfully connected to NATS")
 
 	// Subscribe to execution requests
-	nc.Subscribe("compiler.execute.request", func(msg *nats.Msg) {
+	log.Println("Subscribing to 'compiler.execute.request'")
+	_, err = nc.Subscribe("compiler.execute.request", func(msg *nats.Msg) {
+		log.Println("Received compiler.execute.request message")
 		natshandler.HandleCompilerRequest(msg, nc, workerPool)
 	})
+	if err != nil {
+		logger.Fatal("Failed to subscribe to compiler.execute.request",
+			zap.Error(err))
+	}
 
-	nc.Subscribe("problems.execute.request", func(msg *nats.Msg) {
+	log.Println("Subscribing to 'problems.execute.request'")
+	_, err = nc.Subscribe("problems.execute.request", func(msg *nats.Msg) {
+		log.Println("Received problems.execute.request message")
 		natshandler.HandleProblemRunRequest(msg, nc, workerPool)
 	})
+	if err != nil {
+		logger.Fatal("Failed to subscribe to problems.execute.request",
+			zap.Error(err))
+	}
+
+	log.Println("Engine service is up and listening for requests")
 
 	// Keep the service running
 	select {}
@@ -64,7 +87,9 @@ func checkIfDockerImageExists(imageName string) bool {
 		log.Println("Error checking Docker image:", err)
 		return false
 	}
-	return strings.TrimSpace(string(output)) != ""
+	imageID := strings.TrimSpace(string(output))
+	log.Printf("Image ID for '%s': %s", imageName, imageID)
+	return imageID != ""
 }
 
 // printAllWorkerImages prints all existing images with 'worker' in the name
