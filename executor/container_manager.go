@@ -66,8 +66,8 @@ func NewContainerManager(maxWorkers int, memorylimit, cpunanolimit int64) (*Cont
 
 	logger := logrus.New()
 
-	// Ensure the logs directory exists
-	logDir := "logs"
+	// Use a standard log directory
+	logDir := "/var/log/engine"
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create logs directory: %v", err)
 	}
