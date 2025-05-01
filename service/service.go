@@ -141,8 +141,8 @@ func (s *CompilerService) ExecuteProblemCode(code string, language string) (*com
 	// Normalize the language string
 	language = normalizeLanguage(language)
 
-	fmt.Println("Normalized language:", language)
-	fmt.Println("Code:", code)
+	// fmt.Println("Normalized language:", language)
+	// fmt.Println("Code:", code)
 
 	// Sanitize code
 	if err := internal.SanitizeCode(code, language, 1000000000000); err != nil {
@@ -167,7 +167,7 @@ func (s *CompilerService) ExecuteProblemCode(code string, language string) (*com
 		}, nil
 	}
 
-	fmt.Println("Output:", result.Output)
+	// fmt.Println("Output:", result.Output)
 
 	return &compilergrpc.CompileResponse{
 		Success:       true,

@@ -6,20 +6,42 @@ import (
 	"xcodeengine/executor"
 	"xcodeengine/natshandler"
 
-	"github.com/nats-io/nats.go"
-	"go.uber.org/zap"
 	"log"
 	"strings"
+
+	"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
+
+	zap_betterstack "xcodeengine/logger"
 )
 
 func main() {
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
 
 	// Load configuration
 	log.Println("Loading engine configuration...")
 	config := config.LoadConfig()
 	log.Printf("Loaded config: %+v\n", config)
+
+	// Initialize Zap logger based on environment
+	var logger *zap.Logger
+	var err error
+	if config.Environment == "development" {
+		logger, err = zap.NewDevelopment()
+	} else {
+		logger, err = zap.NewProduction()
+	}
+	if err != nil {
+		panic("Failed to initialize Zap logger: " + err.Error())
+	}
+	defer logger.Sync()
+
+	// Initialize BetterStackLogStreamer
+	logStreamer := zap_betterstack.NewBetterStackLogStreamer(
+		config.BetterStackSourceToken,
+		config.Environment,
+		config.BetterStackUploadURL,
+		logger,
+	)
 
 	log.Println("Prepping Code Execution engine")
 
@@ -33,7 +55,7 @@ func main() {
 	log.Printf("Docker image '%s' found.", imageName)
 
 	log.Println("Starting worker pool initialization")
-	workerPool, err := executor.NewWorkerPool(2, 3, 600, 1000) //workers, jobs, memory, vcpu
+	workerPool, err := executor.NewWorkerPool(2, 3, 200, 1000,logStreamer) //workers, jobs, memory, vcpu,logstreamer
 	if err != nil {
 		logger.Fatal("Failed to initialize worker pool",
 			zap.Error(err))

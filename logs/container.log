@@ -261,3 +261,8 @@
 [36mINFO[0m[2025-04-30T15:29:54+05:30] [32mWorker 1 started[0m                     [36mworkerID[0m=1
 [36mINFO[0m[2025-04-30T15:29:54+05:30] [32mWorker 4 started[0m                     [36mworkerID[0m=4
 [36mINFO[0m[2025-04-30T15:29:54+05:30] [32mWorker 3 started[0m                     [36mworkerID[0m=3
+[36mINFO[0m[2025-05-01T09:43:31+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=d4addd8afb5d [36mstate[0m=idle
+[36mINFO[0m[2025-05-01T09:43:31+05:30] [32mFound existing worker container[0m      [36mcontainer_id[0m=0b959833ed11 [36mstate[0m=idle
+[36mINFO[0m[2025-05-01T09:43:31+05:30] [32mInitialized WorkerPool with 2 workers[0m  [36mmaxWorkers[0m=2
+[36mINFO[0m[2025-05-01T09:43:31+05:30] [32mWorker 2 started[0m                     [36mworkerID[0m=2
+[36mINFO[0m[2025-05-01T09:43:31+05:30] [32mWorker 1 started[0m                     [36mworkerID[0m=1

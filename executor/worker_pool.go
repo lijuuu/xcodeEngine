@@ -11,6 +11,8 @@ import (
 
 	"github.com/fatih/color"
 	logrus "github.com/sirupsen/logrus"
+
+	zap_betterstack "xcodeengine/logger"
 )
 
 // WorkerPool manages a pool of workers for code execution
@@ -22,10 +24,12 @@ type WorkerPool struct {
 	maxJobCount  int
 	wg           sync.WaitGroup
 	shutdownChan chan struct{}
+
+	zap_betterstack *zap_betterstack.BetterStackLogStreamer
 }
 
 // NewWorkerPool initializes a new worker pool
-func NewWorkerPool(maxWorkers, maxJobCount int, memorylimit, cpunanolimit int64) (*WorkerPool, error) {
+func NewWorkerPool(maxWorkers, maxJobCount int, memorylimit, cpunanolimit int64,zap_betterstack *zap_betterstack.BetterStackLogStreamer) (*WorkerPool, error) {
 	containerMgr, err := NewContainerManager(maxWorkers, memorylimit, cpunanolimit)
 	if err != nil {
 		log.Printf("error initializing container manager: %v", err)
@@ -41,6 +45,7 @@ func NewWorkerPool(maxWorkers, maxJobCount int, memorylimit, cpunanolimit int64)
 		maxWorkers:   maxWorkers,
 		maxJobCount:  maxJobCount,
 		shutdownChan: make(chan struct{}),
+		zap_betterstack: zap_betterstack,
 	}
 
 	log.Print("initializing container pool...")

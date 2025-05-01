@@ -9,13 +9,18 @@ import (
 )
 
 type Config struct {
-	MaxWorkers     int
-	JobCount       int
+	MaxWorkers int
+	JobCount   int
 	// URL            string
 	Ratelimit      int
 	RatelimitBurst int
 	Port           string
 	NatsURL        string
+
+	Environment string
+
+	BetterStackUploadURL   string
+	BetterStackSourceToken string
 }
 
 func LoadConfig() Config {
@@ -25,13 +30,12 @@ func LoadConfig() Config {
 	}
 
 	return Config{
-		MaxWorkers:     getEnvInt("MAX_WORKERS", 2),
-		JobCount:       getEnvInt("JOB_COUNT", 1),
-		// URL:            getEnv("URL", "http://localhost:8000"),
-		Ratelimit:      getEnvInt("RATE_LIMIT", 10),
-		RatelimitBurst: getEnvInt("RATE_LIMIT_BURST", 20),
-		Port:           getEnv("PORT", "8000"),
+		
 		NatsURL:        getEnv("NATSURL", "nats://localhost:4222"),
+		Environment:    getEnv("ENVIRONMENT", "production"),
+
+		BetterStackUploadURL:   getEnv("BETTERSTACKUPLOADURL", ""),
+		BetterStackSourceToken: getEnv("BETTERSTACKSOURCETOKEN", ""),
 	}
 }
 
