@@ -78,21 +78,22 @@ jobs:
             sudo chown ubuntu:ubuntu /var/log/engine &&
             sudo chmod 755 /var/log/engine &&
 
-             # Move .env to binary location
-            sudo mv /home/ubuntu/.env /usr/local/bin/.env &&
+            # Copy .env to binary location
+            sudo cp /home/ubuntu/.env /usr/local/bin/.env &&
             sudo chown ubuntu:ubuntu /usr/local/bin/.env &&
-            
+
             # Deploy binary
             sudo systemctl stop engine.service || true &&
             sudo mv /tmp/codeexecutionengine /usr/local/bin/engine &&
             sudo chmod +x /usr/local/bin/engine &&
             sudo chown ubuntu:ubuntu /usr/local/bin/engine &&
-            
+
             # Restart service
             sudo systemctl restart engine.service &&
             sudo systemctl status engine.service
 
-            sudo docker system prune  -y
+            # Prune Docker system
+            yes | sudo docker system prune
           '
           rm -f ssh_key.pem
 
