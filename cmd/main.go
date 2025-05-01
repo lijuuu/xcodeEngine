@@ -27,8 +27,9 @@ func main() {
 		logger.Fatal("Worker Docker image not found. Exiting...")
 	}
 
+	log.Println("Starting worker pool init")
 	// Initialize worker pool
-	workerPool, _ := executor.NewWorkerPool(4, 3, 600, 1000) //worker, jobs, memory, vcpu (4,3,400,1000)
+	workerPool, _ := executor.NewWorkerPool(2, 3, 600, 1000) //worker, jobs, memory, vcpu (4,3,400,1000)
 
 	// Connect to NATS
 	nc, err := nats.Connect(config.NatsURL)
@@ -38,6 +39,8 @@ func main() {
 			zap.Error(err))
 	}
 	defer nc.Close()
+
+	log.Println("connected to nats")
 
 	// Subscribe to execution requests
 	nc.Subscribe("compiler.execute.request", func(msg *nats.Msg) {
