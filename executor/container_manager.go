@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 	"xcodeengine/model"
@@ -15,6 +16,7 @@ import (
 	"github.com/fatih/color"
 	logrus "github.com/sirupsen/logrus"
 )
+
 type ContainerState string
 
 const (
@@ -56,15 +58,22 @@ type ContainerManager struct {
 }
 
 // NewContainerManager creates a new container manager
-func NewContainerManager(maxWorkers int,memorylimit,cpunanolimit int64) (*ContainerManager, error) {
+func NewContainerManager(maxWorkers int, memorylimit, cpunanolimit int64) (*ContainerManager, error) {
 	dockerClient, err := client.NewClientWithOpts()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %v", err)
 	}
 
 	logger := logrus.New()
-	// Set up file output
-	logFile, err := os.OpenFile("logs/container.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+
+	// Ensure the logs directory exists
+	logDir := "logs"
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create logs directory: %v", err)
+	}
+
+	// Open or create the log file
+	logFile, err := os.OpenFile(filepath.Join(logDir, "container.log"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %v", err)
 	}
@@ -82,7 +91,7 @@ func NewContainerManager(maxWorkers int,memorylimit,cpunanolimit int64) (*Contai
 		containers:   make(map[string]*ContainerInfo),
 		logger:       logger,
 		maxWorkers:   maxWorkers,
-		memorylimit: memorylimit,
+		memorylimit:  memorylimit,
 		cpunanolimit: cpunanolimit,
 	}, nil
 }
@@ -334,13 +343,13 @@ func (cm *ContainerManager) GetAvailableContainer() (string, error) {
 		cm.mu.Lock()
 		for id, info := range cm.containers {
 			// if info.State == StateIdle {
-				info.State = StateBusy
-				cm.mu.Unlock()
-				cm.logger.WithFields(logrus.Fields{
-					"container_id": id[:12],
-				}).Info(color.GreenString("Assigned container to job"))
-				return id, nil
-			}
+			info.State = StateBusy
+			cm.mu.Unlock()
+			cm.logger.WithFields(logrus.Fields{
+				"container_id": id[:12],
+			}).Info(color.GreenString("Assigned container to job"))
+			return id, nil
+		}
 		// }
 		cm.mu.Unlock()
 		time.Sleep(retryDelay)
@@ -385,8 +394,6 @@ func (cm *ContainerManager) ContainerCount() int {
 	return len(cm.containers)
 }
 
-
-
 // func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 // 	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
 // 	if err != nil {
@@ -423,7 +430,6 @@ func (cm *ContainerManager) ContainerCount() int {
 // 	return false
 // }
 
-
 func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
 	if err != nil {
@@ -435,7 +441,7 @@ func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 	data, _ := io.ReadAll(info.Body)
 	json.Unmarshal(data, &stats)
 
-	// Calculate CPU usage percentage 
+	// Calculate CPU usage percentage
 	cpuUsage := float64(stats.CPUStats.CPUUsage.TotalUsage)
 	systemUsage := float64(stats.CPUStats.SystemCPUUsage)
 

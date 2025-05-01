@@ -9,4 +9,10 @@ server.log
 
 /logs/*
 
-main
+./main
+
+/logs/container.log
+/logs/server.log
+
+
+/tmp/main
