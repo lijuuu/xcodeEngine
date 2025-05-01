@@ -130,6 +130,10 @@ func (p *WorkerPool) executeJob(workerID int, job Job) {
 
 	p.containerMgr.SetContainerState(containerID, StateIdle)
 
+	if len(output) > 20 {
+		output = output[:20] + "..."
+	}
+
 	if err != nil {
 		p.logger.WithFields(logrus.Fields{
 			"workerID":    workerID,
