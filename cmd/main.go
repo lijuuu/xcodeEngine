@@ -55,7 +55,7 @@ func main() {
 	log.Printf("Docker image '%s' found.", imageName)
 
 	log.Println("Starting worker pool initialization")
-	workerPool, err := executor.NewWorkerPool(2, 3, 200, 1000,logStreamer) //workers, jobs, memory, vcpu,logstreamer
+	workerPool, err := executor.NewWorkerPool(2, 3, 200, 500,logStreamer) //workers, jobs, memory, vcpu,logstreamer
 	if err != nil {
 		logger.Fatal("Failed to initialize worker pool",
 			zap.Error(err))
