@@ -29,7 +29,7 @@ type WorkerPool struct {
 }
 
 // NewWorkerPool initializes a new worker pool
-func NewWorkerPool(maxWorkers, maxJobCount int, memorylimit, cpunanolimit int64,zap_betterstack *zap_betterstack.BetterStackLogStreamer) (*WorkerPool, error) {
+func NewWorkerPool(maxWorkers, maxJobCount int, memorylimit, cpunanolimit int64, zap_betterstack *zap_betterstack.BetterStackLogStreamer) (*WorkerPool, error) {
 	containerMgr, err := NewContainerManager(maxWorkers, memorylimit, cpunanolimit)
 	if err != nil {
 		log.Printf("error initializing container manager: %v", err)
@@ -39,12 +39,12 @@ func NewWorkerPool(maxWorkers, maxJobCount int, memorylimit, cpunanolimit int64,
 	log.Print("creating worker pool...")
 
 	pool := &WorkerPool{
-		jobs:         make(chan Job, maxJobCount),
-		containerMgr: containerMgr,
-		logger:       containerMgr.logger,
-		maxWorkers:   maxWorkers,
-		maxJobCount:  maxJobCount,
-		shutdownChan: make(chan struct{}),
+		jobs:            make(chan Job, maxJobCount),
+		containerMgr:    containerMgr,
+		logger:          containerMgr.logger,
+		maxWorkers:      maxWorkers,
+		maxJobCount:     maxJobCount,
+		shutdownChan:    make(chan struct{}),
 		zap_betterstack: zap_betterstack,
 	}
 
@@ -210,12 +210,17 @@ func (p *WorkerPool) executeCode(containerID, language, code string) (string, bo
 	err := cmd.Run()
 	duration := time.Since(start)
 
+	outputStr := output.String()
+	if len(outputStr) > 20 {
+		outputStr = outputStr[:20] + "..."
+	}
+
 	if err != nil {
 		p.logger.WithFields(logrus.Fields{
 			"containerID": containerID[:12],
 			"language":    language,
 			"duration":    duration,
-			"output":      output.String(),
+			"output":      outputStr,
 			"error":       err,
 		}).Error(color.RedString("Execution error"))
 		return output.String(), false, fmt.Errorf("execution error: %w", err)
