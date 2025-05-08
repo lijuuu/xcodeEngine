@@ -46,7 +46,7 @@ func main() {
 	log.Println("Prepping Code Execution engine")
 
 	// Check if the worker image exists
-	imageName := "lijuthomas/worker"
+	imageName := "lijuthomas/worker:latest"
 	log.Printf("Checking if Docker image '%s' exists locally...", imageName)
 	if !checkIfDockerImageExists(imageName) {
 		logger.Fatal("Worker Docker image not found. Exiting...",
