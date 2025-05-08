@@ -345,7 +345,7 @@ func (cm *ContainerManager) GetAvailableContainer() (string, error) {
 	for i := 0; i < maxRetries; i++ {
 		cm.mu.Lock()
 		for id, info := range cm.containers {
-			// if info.State == StateIdle {
+			if info.State == StateIdle {
 			info.State = StateBusy
 			cm.mu.Unlock()
 			cm.logger.WithFields(logrus.Fields{
@@ -353,7 +353,7 @@ func (cm *ContainerManager) GetAvailableContainer() (string, error) {
 			}).Info(color.GreenString("Assigned container to job"))
 			return id, nil
 		}
-		// }
+		}
 		cm.mu.Unlock()
 		time.Sleep(retryDelay)
 	}
@@ -457,7 +457,7 @@ func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 	memoryPercent := (float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit)) * 100.0
 
 	// Check if either CPU or memory usage exceeds 70%
-	if cpuPercent > 70.0 || memoryPercent > 70.0 {
+	if cpuPercent > 99.0 || memoryPercent > 99.0 {
 		cm.logger.WithFields(logrus.Fields{
 			"container_id":   containerID[:12],
 			"cpu_percent":    fmt.Sprintf("%.2f%%", cpuPercent),

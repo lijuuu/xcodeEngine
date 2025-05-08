@@ -61,7 +61,7 @@ func normalizeLanguage(lang string) string {
 		"pyn":     "python",
 		"pythn":   "python",
 		"phyton":  "python",
-		"py":  "python",
+		"py":      "python",
 		"py thon": "python",
 		"pthon":   "python",
 
@@ -114,6 +114,8 @@ func (s *CompilerService) Compile(code string, language string) (*compilergrpc.C
 			StatusMessage: err.Error(),
 		}, nil
 	}
+
+	// fmt.Println(code)
 
 	// Execute code using worker pool
 	result := s.WorkerPool.ExecuteJob(language, code)
