@@ -1,5 +1,5 @@
 # Use Alpine for minimal attack surface
-FROM golang:1.22.5-alpine
+FROM golang:1.25rc3-alpine
 
 # Set the working directory
 WORKDIR /app
