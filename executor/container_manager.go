@@ -397,41 +397,6 @@ func (cm *ContainerManager) ContainerCount() int {
 	return len(cm.containers)
 }
 
-// func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
-// 	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
-// 	if err != nil {
-// 		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to inspect container"))
-// 		return false
-// 	}
-
-// 	var stats model.ContainerStats
-// 	data, _ := io.ReadAll(info.Body)
-// 	json.Unmarshal(data, &stats)
-
-// 	// Calculate CPU usage percentage
-// 	cpuDelta := float64(stats.CPUStats.CPUUsage.TotalUsage - stats.PreCPUStats.CPUUsage.TotalUsage)
-// 	systemDelta := float64(stats.CPUStats.SystemCPUUsage - stats.PreCPUStats.SystemCPUUsage)
-
-// 	cpuPercent := 0.0
-// 	if systemDelta > 0 && cpuDelta > 0 {
-// 		cpuPercent = (cpuDelta / systemDelta) * 100.0
-// 	}
-
-// 	// Calculate memory usage percentage
-// 	memoryPercent := (float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit)) * 100.0
-
-// 	// Check if either CPU or memory usage exceeds 70%
-// 	if cpuPercent > 70.0 || memoryPercent > 70.0 {
-// 		cm.logger.WithFields(logrus.Fields{
-// 			"container_id":   containerID[:12],
-// 			"cpu_percent":    fmt.Sprintf("%.2f%%", cpuPercent),
-// 			"memory_percent": fmt.Sprintf("%.2f%%", memoryPercent),
-// 		}).Error(color.MagentaString("Resource outsurge detected"))
-// 		return true
-// 	}
-
-// 	return false
-// }
 
 func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
