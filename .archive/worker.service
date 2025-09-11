@@ -1,0 +1,13 @@
+[Unit]
+Description=Worker Service
+After=network.target
+
+[Service]
+ExecStart=/home/ubuntu/xcodeEngine/worker
+Restart=always
+User=ubuntu
+Environment=PORT=8000
+WorkingDirectory=/home/ubuntu/xcodeEngine
+
+[Install]
+WantedBy=multi-user.target

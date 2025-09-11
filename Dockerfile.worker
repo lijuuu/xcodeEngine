@@ -1,50 +1,59 @@
-# Use Alpine for minimal attack surface
-FROM golang:1.22.5-alpine
+# Stage 1: Builder stage for compiling dependencies
+FROM golang:1.22.5-alpine AS builder
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Install required dependencies
+# Install minimal dependencies required for building
 RUN apk add --no-cache \
     g++ \
     gcc \
-    python3 \
-    nodejs \
     musl-dev \
-    curl \
-    bash \
     git \
     cmake \
     make
 
-# Clone nlohmann/json from GitHub for supporting JSON in CPP
-RUN git clone https://github.com/nlohmann/json.git && \
+# Clone and install nlohmann/json with shallow clone for speed
+RUN git clone --depth 1 https://github.com/nlohmann/json.git && \
     cd json && \
     mkdir build && cd build && \
     cmake .. && make install && \
-    cd ../.. && rm -rf json
+    cd ../.. && rm -rf json && \
+    # Debug: List installed files to verify
+    find /usr/local -name "nlohmann*"
+
+# Stage 2: Final minimal image
+FROM golang:1.22.5-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Install minimal runtime dependencies and tini for process management
+RUN apk add --no-cache \
+    python3 \
+    nodejs \
+    bash \
+    tini \
+    && rm -rf /var/cache/apk/*
+
+# Copy compiled dependencies from builder stage (only the header files)
+COPY --from=builder /usr/local/include/nlohmann /usr/local/include/nlohmann
 
 # Create a non-root user
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Create the temp directory with appropriate permissions
-RUN mkdir -p /app/temp && chown appuser:appgroup /app/temp && chmod 770 /app/temp
-
-# Create all the needed files with placeholder content
-RUN echo "// Temporary Go file" > /app/temp/code.go && \
+# Create temp directory and files with appropriate permissions in one layer
+RUN mkdir -p /app/temp && \
+    echo "// Temporary Go file" > /app/temp/code.go && \
     echo "# Temporary Python file" > /app/temp/code.py && \
     echo "// Temporary JavaScript file" > /app/temp/code.js && \
-    echo "// Temporary C++ file" > /app/temp/code.cpp
-
-# Create compiler output destination
-RUN touch /app/temp/exe && chown appuser:appgroup /app/temp/exe && chmod 770 /app/temp/exe
-
-# Set permissions for all code files to be writable and executable
-RUN chown appuser:appgroup /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp && \
-    chmod 660 /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp
-
-# Set permissions for the /app directory structure
-RUN chmod 755 /app
+    echo "// Temporary C++ file" > /app/temp/code.cpp && \
+    touch /app/temp/exe && \
+    chown -R appuser:appgroup /app/temp && \
+    chmod 770 /app/temp && \
+    chmod 660 /app/temp/code.go /app/temp/code.py /app/temp/code.js /app/temp/code.cpp && \
+    chmod 770 /app/temp/exe && \
+    chmod 755 /app
 
 # Remove unnecessary write permissions from root filesystem
 RUN chmod 555 /bin /usr/bin /usr/local/bin
@@ -52,8 +61,11 @@ RUN chmod 555 /bin /usr/bin /usr/local/bin
 # Switch to non-root user
 USER appuser
 
-# Build Go standard library to optimize performance
+# Pre-build Go standard library to optimize performance
 RUN go build -v -o /dev/null std
 
-# Set default command to keep the container running
+# Use tini as entrypoint for better process management
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Default command to keep container running
 CMD ["tail", "-f", "/dev/null"]

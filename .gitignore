@@ -8,3 +8,11 @@ container.log
 server.log
 
 /logs/*
+
+./main
+
+/logs/container.log
+/logs/server.log
+
+
+/tmp/main

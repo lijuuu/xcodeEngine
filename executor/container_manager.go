@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 	"xcodeengine/model"
@@ -15,6 +16,7 @@ import (
 	"github.com/fatih/color"
 	logrus "github.com/sirupsen/logrus"
 )
+
 type ContainerState string
 
 const (
@@ -56,15 +58,25 @@ type ContainerManager struct {
 }
 
 // NewContainerManager creates a new container manager
-func NewContainerManager(maxWorkers int,memorylimit,cpunanolimit int64) (*ContainerManager, error) {
-	dockerClient, err := client.NewClientWithOpts()
+func NewContainerManager(maxWorkers int, memorylimit, cpunanolimit int64) (*ContainerManager, error) {
+	dockerClient, err := client.NewClientWithOpts(
+		client.FromEnv,
+		client.WithVersion("1.45"),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %v", err)
 	}
 
 	logger := logrus.New()
-	// Set up file output
-	logFile, err := os.OpenFile("logs/container.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+
+	// Use a standard log directory
+	logDir := "/var/log/engine"
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create logs directory: %v", err)
+	}
+
+	// Open or create the log file
+	logFile, err := os.OpenFile(filepath.Join(logDir, "container.log"), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open log file: %v", err)
 	}
@@ -82,7 +94,7 @@ func NewContainerManager(maxWorkers int,memorylimit,cpunanolimit int64) (*Contai
 		containers:   make(map[string]*ContainerInfo),
 		logger:       logger,
 		maxWorkers:   maxWorkers,
-		memorylimit: memorylimit,
+		memorylimit:  memorylimit,
 		cpunanolimit: cpunanolimit,
 	}, nil
 }
@@ -115,7 +127,7 @@ func (cm *ContainerManager) InitializePool() error {
 
 	// Register existing worker containers
 	for _, c := range containers {
-		if c.Image == "worker" {
+		if c.Image == "lijuthomas/worker" {
 			state := StateIdle
 			if c.State != "running" {
 				state = StateError
@@ -168,7 +180,7 @@ func (cm *ContainerManager) StartContainer() error {
 	cm.mu.Unlock()
 
 	config := &container.Config{
-		Image: "worker",
+		Image: "lijuthomas/worker",
 		Tty:   true,
 	}
 
@@ -280,7 +292,7 @@ func (cm *ContainerManager) checkHealth() {
 
 	runningWorkers := make(map[string]bool)
 	for _, c := range containers {
-		if c.Image == "worker" {
+		if c.Image == "lijuthomas/worker" {
 			if _, exists := cm.containers[c.ID]; exists {
 				if cm.containers[c.ID].State != StateError {
 					runningWorkers[c.ID] = true
@@ -333,15 +345,15 @@ func (cm *ContainerManager) GetAvailableContainer() (string, error) {
 	for i := 0; i < maxRetries; i++ {
 		cm.mu.Lock()
 		for id, info := range cm.containers {
-			// if info.State == StateIdle {
-				info.State = StateBusy
-				cm.mu.Unlock()
-				cm.logger.WithFields(logrus.Fields{
-					"container_id": id[:12],
-				}).Info(color.GreenString("Assigned container to job"))
-				return id, nil
-			}
-		// }
+			if info.State == StateIdle {
+			info.State = StateBusy
+			cm.mu.Unlock()
+			cm.logger.WithFields(logrus.Fields{
+				"container_id": id[:12],
+			}).Info(color.GreenString("Assigned container to job"))
+			return id, nil
+		}
+		}
 		cm.mu.Unlock()
 		time.Sleep(retryDelay)
 	}
@@ -386,44 +398,6 @@ func (cm *ContainerManager) ContainerCount() int {
 }
 
 
-
-// func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
-// 	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
-// 	if err != nil {
-// 		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to inspect container"))
-// 		return false
-// 	}
-
-// 	var stats model.ContainerStats
-// 	data, _ := io.ReadAll(info.Body)
-// 	json.Unmarshal(data, &stats)
-
-// 	// Calculate CPU usage percentage
-// 	cpuDelta := float64(stats.CPUStats.CPUUsage.TotalUsage - stats.PreCPUStats.CPUUsage.TotalUsage)
-// 	systemDelta := float64(stats.CPUStats.SystemCPUUsage - stats.PreCPUStats.SystemCPUUsage)
-
-// 	cpuPercent := 0.0
-// 	if systemDelta > 0 && cpuDelta > 0 {
-// 		cpuPercent = (cpuDelta / systemDelta) * 100.0
-// 	}
-
-// 	// Calculate memory usage percentage
-// 	memoryPercent := (float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit)) * 100.0
-
-// 	// Check if either CPU or memory usage exceeds 70%
-// 	if cpuPercent > 70.0 || memoryPercent > 70.0 {
-// 		cm.logger.WithFields(logrus.Fields{
-// 			"container_id":   containerID[:12],
-// 			"cpu_percent":    fmt.Sprintf("%.2f%%", cpuPercent),
-// 			"memory_percent": fmt.Sprintf("%.2f%%", memoryPercent),
-// 		}).Error(color.MagentaString("Resource outsurge detected"))
-// 		return true
-// 	}
-
-// 	return false
-// }
-
-
 func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
 	if err != nil {
@@ -435,7 +409,7 @@ func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 	data, _ := io.ReadAll(info.Body)
 	json.Unmarshal(data, &stats)
 
-	// Calculate CPU usage percentage 
+	// Calculate CPU usage percentage
 	cpuUsage := float64(stats.CPUStats.CPUUsage.TotalUsage)
 	systemUsage := float64(stats.CPUStats.SystemCPUUsage)
 
@@ -448,7 +422,7 @@ func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
 	memoryPercent := (float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit)) * 100.0
 
 	// Check if either CPU or memory usage exceeds 70%
-	if cpuPercent > 70.0 || memoryPercent > 70.0 {
+	if cpuPercent > 99.0 || memoryPercent > 99.0 {
 		cm.logger.WithFields(logrus.Fields{
 			"container_id":   containerID[:12],
 			"cpu_percent":    fmt.Sprintf("%.2f%%", cpuPercent),

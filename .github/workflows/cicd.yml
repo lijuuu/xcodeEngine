@@ -1,72 +1,213 @@
-name: CI-CD Pipeline
+name: Simple Binary Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main, deploytesting]
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout code
+      # Step 1: Notify Slack – Deployment Started
+      - name: Notify Slack – Deployment Started
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          slack-bot-token: ${{ secrets.SLACK_WEBHOOK_URL }}
+          channel-id: "ci-cd-notifications"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":rocket: *Deployment Started* for *${{ github.repository }}* on branch *${{ github.ref_name }}*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Committer:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run ID:*\n${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOKS
+
+      # Step 2: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Go environment
+      # Step 3: Set up Go
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.1'
+          go-version: "1.21"
 
-      # Step 3: Install Go dependencies
-      - name: Install dependencies
-        run: go mod download
-
-      # Step 4: Run Go vet to check for code issues
-      - name: Run go vet
-        run: go vet ./...
-
-      # Step 5: Build the Go binary
+      # Step 4: Build binary
       - name: Build binary
-        run: go build -o codeexecutionengine ./cmd
-
-      # Step 6: Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # Step 7: Build and push Docker image
-      - name: Build and push Docker image
         run: |
-          docker build -t lijuthomas/codeexecutionengine:${{ github.sha }} -t lijuthomas/codeexecutionengine:latest .
-          docker push lijuthomas/codeexecutionengine:${{ github.sha }}
-          docker push lijuthomas/codeexecutionengine:latest
+          GOOS=linux GOARCH=amd64 go build -o engine ./cmd/main.go
 
-      # Step 8: Deploy to EC2
+      # Step 5: Upload binary and restart engine service on EC2
       - name: Deploy to EC2
         env:
-          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
           SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_SERVER_IP }}
         run: |
-          echo "$SSH_KEY" > ssh_key.pem
+          printf "%s" "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST << EOF
-            # Log in to Docker Hub on EC2
-            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            
-            # Stop and remove any existing container
-            docker stop codeexecutionengine || true
-            docker rm codeexecutionengine || true
+          scp -o StrictHostKeyChecking=no -i ssh_key.pem engine ubuntu@$EC2_HOST:/tmp/engine
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$EC2_HOST '
+            # Create log directory and set permissions
+            sudo mkdir -p /var/log/engine &&
+            sudo chown ubuntu:ubuntu /var/log/engine &&
+            sudo chmod 755 /var/log/engine &&
 
-            # Pull the latest Docker image
-            docker pull lijuthomas/codeexecutionengine:latest
+            # Copy .env to binary location and home dir
+            sudo cp /home/ubuntu/.env /usr/local/bin/.env &&
+            sudo cp /home/ubuntu/.env /home/ubuntu/.env &&
+            sudo chown ubuntu:ubuntu /usr/local/bin/.env &&
+            sudo chown ubuntu:ubuntu /home/ubuntu/.env &&
 
-            # Run the Docker container with required environment variables
-            docker run -d --name codeexecutionengine -p 50053:50053 \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              lijuthomas/codeexecutionengine:latest
-          EOF
+            # Deploy binary to /usr/local/bin
+            sudo systemctl stop engine.service || true &&
+            sudo mv /tmp/engine /usr/local/bin/engine &&
+            sudo chmod +x /usr/local/bin/engine &&
+            sudo chown ubuntu:ubuntu /usr/local/bin/engine &&
+
+            # Also copy binary to /home/ubuntu
+            sudo cp /usr/local/bin/engine /home/ubuntu/engine &&
+            sudo chown ubuntu:ubuntu /home/ubuntu/engine &&
+
+            # Restart service
+            sudo systemctl restart engine.service &&
+            sudo systemctl status engine.service &&
+
+            # Prune Docker system
+            yes | sudo docker system prune
+          '
+          rm -f ssh_key.pem
+
+
+      # Step 6: Notify Slack – Deployment Successful
+      - name: Notify Slack – Deployment Successful
+        if: success()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          slack-bot-token: ${{ secrets.SLACK_WEBHOOK_URL }}
+          channel-id: "ci-cd-notifications"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Deployment Succeeded* for *${{ github.repository }}* on branch *${{ github.ref_name }}*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Committer:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run ID:*\n${{ github.run_id }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Run",
+                        "emoji": true
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOKS
+
+      # Step 7: Notify Slack – Deployment Failed
+      - name: Notify Slack – Deployment Failed
+        if: failure()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          slack-bot-token: ${{ secrets.SLACK_WEBHOOK_URL }}
+          channel-id: "ci-cd-notifications"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Deployment Failed* for *${{ github.repository }}* on branch *${{ github.ref_name }}*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Committer:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Run ID:*\n${{ github.run_id }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Run",
+                        "emoji": true
+                      },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOKS
