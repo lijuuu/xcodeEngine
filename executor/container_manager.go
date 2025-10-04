@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-	"xcodeengine/model"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -342,21 +341,22 @@ func (cm *ContainerManager) GetAvailableContainer() (string, error) {
 	const maxRetries = 10
 	const retryDelay = 200 * time.Millisecond
 
+	cm.mu.Lock()
 	for i := 0; i < maxRetries; i++ {
-		cm.mu.Lock()
+
 		for id, info := range cm.containers {
 			if info.State == StateIdle {
-			info.State = StateBusy
-			cm.mu.Unlock()
-			cm.logger.WithFields(logrus.Fields{
-				"container_id": id[:12],
-			}).Info(color.GreenString("Assigned container to job"))
-			return id, nil
+				info.State = StateBusy
+				cm.mu.Unlock()
+				cm.logger.WithFields(logrus.Fields{
+					"container_id": id[:12],
+				}).Info(color.GreenString("Assigned container to job"))
+				return id, nil
+			}
 		}
-		}
-		cm.mu.Unlock()
 		time.Sleep(retryDelay)
 	}
+	cm.mu.Unlock()
 	cm.logger.WithFields(logrus.Fields{"retries": maxRetries}).Error(color.RedString("No available containers after %d retries", maxRetries))
 	return "", fmt.Errorf("no available containers after %d retries", maxRetries)
 }
@@ -376,17 +376,34 @@ func (cm *ContainerManager) SetContainerState(containerID string, state Containe
 
 // Shutdown cleans up all containers
 func (cm *ContainerManager) Shutdown() {
+	//grab list of containers under lock, then release lock
 	cm.mu.Lock()
-	defer cm.mu.Unlock()
-	ctx := context.Background()
-
+	containers := make([]string, 0, len(cm.containers))
 	for id := range cm.containers {
-		cm.dockerClient.ContainerRemove(ctx, id, container.RemoveOptions{Force: true})
+		containers = append(containers, id)
+	}
+	cm.mu.Unlock()
+
+	ctx := context.Background()
+	for _, id := range containers {
+		//remove container safely without holding lock
+		if err := cm.dockerClient.ContainerRemove(ctx, id, container.RemoveOptions{Force: true}); err != nil {
+			cm.logger.WithFields(logrus.Fields{
+				"container_id": id[:12],
+				"error":        err,
+			}).Error(color.RedString("Failed to remove container during shutdown"))
+			continue
+		}
 		cm.logger.WithFields(logrus.Fields{
 			"container_id": id[:12],
 		}).Info(color.GreenString("Shutdown: Removed container"))
 	}
+
+	// finally, clear the map safely
+	cm.mu.Lock()
 	cm.containers = make(map[string]*ContainerInfo)
+	cm.mu.Unlock()
+
 	cm.logger.Info(color.GreenString("Shutdown complete"))
 }
 
@@ -397,37 +414,60 @@ func (cm *ContainerManager) ContainerCount() int {
 	return len(cm.containers)
 }
 
-
 func (cm *ContainerManager) CheckResourceOutsurge(containerID string) bool {
-	info, err := cm.dockerClient.ContainerStatsOneShot(context.Background(), containerID)
+	ctx := context.Background()
+	info, err := cm.dockerClient.ContainerStatsOneShot(ctx, containerID)
 	if err != nil {
 		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to inspect container"))
 		return false
 	}
+	defer info.Body.Close()
 
-	var stats model.ContainerStats
-	data, _ := io.ReadAll(info.Body)
-	json.Unmarshal(data, &stats)
-
-	// Calculate CPU usage percentage
-	cpuUsage := float64(stats.CPUStats.CPUUsage.TotalUsage)
-	systemUsage := float64(stats.CPUStats.SystemCPUUsage)
-
-	cpuPercent := 0.0
-	if systemUsage > 0 {
-		cpuPercent = (cpuUsage / systemUsage) * 100.0
+	//HOTFIX: read all bytes once, avoid streaming decode
+	data, err := io.ReadAll(info.Body)
+	if err != nil {
+		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to read container stats"))
+		return false
 	}
 
-	// Calculate memory usage percentage
-	memoryPercent := (float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit)) * 100.0
+	//HOTFIX: only parse necessary fields for CPU/memory
+	var stats struct {
+		CPUStats struct {
+			CPUUsage struct {
+				TotalUsage uint64 `json:"total_usage"`
+			} `json:"cpu_usage"`
+			SystemCPUUsage uint64 `json:"system_cpu_usage"`
+		} `json:"cpu_stats"`
+		MemoryStats struct {
+			Usage uint64 `json:"usage"`
+			Limit uint64 `json:"limit"`
+		} `json:"memory_stats"`
+	}
 
-	// Check if either CPU or memory usage exceeds 70%
-	if cpuPercent > 99.0 || memoryPercent > 99.0 {
+	if err := json.Unmarshal(data, &stats); err != nil {
+		cm.logger.WithFields(logrus.Fields{"error": err}).Error(color.RedString("Failed to unmarshal stats"))
+		return false
+	}
+
+	//Calculate CPU percentage
+	cpuPercent := 0.0
+	if stats.CPUStats.SystemCPUUsage > 0 {
+		cpuPercent = (float64(stats.CPUStats.CPUUsage.TotalUsage) / float64(stats.CPUStats.SystemCPUUsage)) * 100
+	}
+
+	//Calculate memory percentage
+	memPercent := 0.0
+	if stats.MemoryStats.Limit > 0 {
+		memPercent = (float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit)) * 100
+	}
+
+	//TAGGED HOTFIX: threshold check
+	if cpuPercent > 99.0 || memPercent > 99.0 {
 		cm.logger.WithFields(logrus.Fields{
 			"container_id":   containerID[:12],
 			"cpu_percent":    fmt.Sprintf("%.2f%%", cpuPercent),
-			"memory_percent": fmt.Sprintf("%.2f%%", memoryPercent),
-		}).Error(color.MagentaString("Resource outsurge detected"))
+			"memory_percent": fmt.Sprintf("%.2f%%", memPercent),
+		}).Error(color.MagentaString("Resource outsurge detected [TAG:resource-hotfix]"))
 		return true
 	}
 
