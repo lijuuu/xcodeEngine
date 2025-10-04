@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"os/exec"
 	"xcodeengine/config"
 	"xcodeengine/executor"
 	"xcodeengine/natshandler"
 
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"strings"
 
 	"github.com/nats-io/nats.go"
@@ -55,7 +58,7 @@ func main() {
 	log.Printf("Docker image '%s' found.", imageName)
 
 	log.Println("Starting worker pool initialization")
-	workerPool, err := executor.NewWorkerPool(2, 3, 400, 500,logStreamer) //workers, jobs, memory, vcpu,logstreamer
+	workerPool, err := executor.NewWorkerPool(2, 3, 400, 500, logStreamer) //workers, jobs, memory, vcpu,logstreamer
 	if err != nil {
 		logger.Fatal("Failed to initialize worker pool",
 			zap.Error(err))
@@ -93,6 +96,11 @@ func main() {
 		logger.Fatal("Failed to subscribe to problems.execute.request",
 			zap.Error(err))
 	}
+
+	go func() {
+		fmt.Println("pprof server running on :6060")
+		http.ListenAndServe("localhost:6060", nil)
+	}()
 
 	log.Println("Engine service is up and listening for requests")
 
