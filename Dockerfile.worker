@@ -1,5 +1,5 @@
 # Stage 1: Builder stage for compiling dependencies
-FROM golang:1.22.5-alpine AS builder
+FROM golang:1.25.2-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -23,7 +23,7 @@ RUN git clone --depth 1 https://github.com/nlohmann/json.git && \
     find /usr/local -name "nlohmann*"
 
 # Stage 2: Final minimal image
-FROM golang:1.22.5-alpine
+FROM golang:1.25.2-alpine
 
 # Set working directory
 WORKDIR /app
